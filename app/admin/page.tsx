@@ -7,8 +7,8 @@ export default async function AdminPage() {
 
   if (!data.user) return <div>Brak dostępu</div>;
 
-  const user = await prisma.user.findUnique({
-    where: { id: data.user.id },
+const user = await prisma.user.findUnique({
+      where: { id: data.user.id },
   });
 
   if (user?.role !== "ADMIN") {
