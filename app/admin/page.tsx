@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { supabaseServer } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
