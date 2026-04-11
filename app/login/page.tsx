@@ -1,24 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 
 export default function LoginPage() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   async function login() {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const res = await fetch("/api/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
     });
 
-    if (error) {
+    if (!res.ok) {
       alert("Błędny email lub hasło");
       return;
     }
