@@ -4,7 +4,7 @@ export default function Home() {
       {/* HEADER */}
       <header className="w-full h-20 border-b border-gray-200 bg-white flex items-center justify-between px-10">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="Resorakownia logo" className="h-10 w-auto" />
+          <img src="/logo.png" alt="Resorakownia logo" className="h-12 w-auto" />
         </div>
 
         <nav className="flex items-center gap-8 text-[16px] font-medium">
@@ -115,7 +115,7 @@ export default function Home() {
       {/* STOPKA */}
       <footer className="w-full bg-gray-50 border-t border-gray-200 mt-20 py-10 px-10">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <img src="/logo.png" alt="Resorakownia logo" className="h-8 w-auto" />
+          <img src="/logo.png" alt="Resorakownia logo" className="h-12 w-auto" />
           <p className="text-gray-500 text-sm">© 2026 Resorakownia</p>
         </div>
       </footer>
