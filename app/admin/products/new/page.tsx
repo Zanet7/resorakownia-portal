@@ -1,39 +1,25 @@
 export const dynamic = "force-dynamic";
 
-"use client";
+import NewProductForm from "@/components/admin/NewProductForm";
+import { supabaseServer } from "@/lib/supabase/server";
+import { prisma } from "@/lib/prisma";
 
-import { useState } from "react";
+export default async function NewProductPage() {
+  const supabase = supabaseServer();
+  const { data } = await supabase.auth.getUser();
 
-export default function NewProductPage() {
-  const [name, setName] = useState("");
+  if (!data.user) return <div>Brak dostępu</div>;
 
-  async function handleSubmit(e: any) {
-    e.preventDefault();
+  const user = await prisma.user.findUnique({
+    where: { id: data.user.id },
+  });
 
-    await fetch("/api/admin/products", {
-      method: "POST",
-      body: JSON.stringify({ name }),
-    });
-
-    window.location.href = "/admin/products";
-  }
+  if (user?.role !== "ADMIN") return <div>Brak uprawnień</div>;
 
   return (
     <div className="p-10">
       <h1 className="text-2xl font-bold mb-4">Dodaj produkt</h1>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          className="border p-2 w-full"
-          placeholder="Nazwa produktu"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-
-        <button className="bg-black text-white px-4 py-2 rounded">
-          Zapisz
-        </button>
-      </form>
+      <NewProductForm />
     </div>
   );
 }
