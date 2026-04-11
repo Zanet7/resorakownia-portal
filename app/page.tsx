@@ -45,7 +45,7 @@ export default function Home() {
           <div className="w-full h-[380px] bg-gray-100 rounded-3xl shadow-sm overflow-hidden">
             {/* Podmień na swoje zdjęcie */}
             <img
-              src="/placeholder-hero.jpg"
+              src="/fot.jpg"
               alt="Modele aut"
               className="w-full h-full object-cover"
             />
