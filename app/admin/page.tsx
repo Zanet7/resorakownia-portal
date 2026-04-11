@@ -7,8 +7,8 @@ export default async function AdminPage() {
 
   if (!data.user) return <div>Brak dostępu</div>;
 
-const user = await prisma.user.findUnique({
-      where: { id: data.user.id },
+  const user = await prisma.user.findUnique({
+    where: { id: data.user.id },
   });
 
   if (user?.role !== "ADMIN") {
@@ -18,7 +18,6 @@ const user = await prisma.user.findUnique({
   return (
     <div className="p-10">
       <h1 className="text-3xl font-bold mb-6">Panel administratora</h1>
-
       <a
         href="/admin/products/new"
         className="bg-black text-white px-4 py-2 rounded"
