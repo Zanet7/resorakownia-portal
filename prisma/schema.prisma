@@ -8,14 +8,19 @@ datasource db {
 }
 
 /// UŻYTKOWNICY (powiązani z Supabase Auth)
+enum UserRole {
+  USER
+  ADMIN
+}
+
 model User {
   id            String        @id @default(uuid())
   email         String        @unique
   username      String?       @unique
   avatarUrl     String?
   createdAt     DateTime      @default(now())
+  role          UserRole      @default(USER)
 
-  // Relacje
   products      Product[]
   auctions      Auction[]
   bids          Bid[]
