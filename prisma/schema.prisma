@@ -7,11 +7,165 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/// UŻYTKOWNICY (powiązani z Supabase Auth)
+model User {
+  id            String        @id @default(uuid())
+  email         String        @unique
+  username      String?       @unique
+  avatarUrl     String?
+  createdAt     DateTime      @default(now())
+
+  // Relacje
+  products      Product[]
+  auctions      Auction[]
+  bids          Bid[]
+  cartItems     CartItem[]
+  orders        Order[]
+  collections   Collection[]
+  comments      Comment[]
+}
+
+/// PRODUKTY (resoraki)
 model Product {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String
-  price       Float
-  image       String
-  createdAt   DateTime @default(now())
+  id            String        @id @default(uuid())
+  name          String
+  brand         String?
+  year          Int?
+  description   String?
+  imageUrl      String?
+  price         Decimal       @db.Decimal(10,2)
+  createdAt     DateTime      @default(now())
+
+  ownerId       String
+  owner         User          @relation(fields: [ownerId], references: [id])
+
+  auction       Auction?
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  collections   CollectionItem[]
+
+  comments      Comment[]     // ← DODANE
+}
+
+/// AUKCJE
+model Auction {
+  id            String        @id @default(uuid())
+  title         String
+  description   String?
+  startingPrice Decimal       @db.Decimal(10,2)
+  currentPrice  Decimal       @db.Decimal(10,2)
+  endDate       DateTime
+  createdAt     DateTime      @default(now())
+
+  productId     String        @unique
+  product       Product       @relation(fields: [productId], references: [id])
+
+  ownerId       String
+  owner         User          @relation(fields: [ownerId], references: [id])
+
+  bids          Bid[]
+  comments      Comment[]     // ← DODANE
+}
+
+
+/// LICYTACJE
+model Bid {
+  id            String        @id @default(uuid())
+  amount        Decimal       @db.Decimal(10,2)
+  createdAt     DateTime      @default(now())
+
+  // Relacje
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+
+  auctionId     String
+  auction       Auction       @relation(fields: [auctionId], references: [id])
+}
+
+/// KOSZYK
+model CartItem {
+  id            String        @id @default(uuid())
+  quantity      Int           @default(1)
+  addedAt       DateTime      @default(now())
+
+  // Relacje
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+
+  productId     String
+  product       Product       @relation(fields: [productId], references: [id])
+}
+
+/// ZAMÓWIENIA
+model Order {
+  id            String        @id @default(uuid())
+  totalPrice    Decimal       @db.Decimal(10,2)
+  status        OrderStatus   @default(PENDING)
+  createdAt     DateTime      @default(now())
+
+  // Relacje
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+
+  items         OrderItem[]
+}
+
+model OrderItem {
+  id            String        @id @default(uuid())
+  quantity      Int
+  price         Decimal       @db.Decimal(10,2)
+
+  // Relacje
+  orderId       String
+  order         Order         @relation(fields: [orderId], references: [id])
+
+  productId     String
+  product       Product       @relation(fields: [productId], references: [id])
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+/// KOLEKCJE UŻYTKOWNIKÓW
+model Collection {
+  id            String        @id @default(uuid())
+  name          String
+  createdAt     DateTime      @default(now())
+
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+
+  items         CollectionItem[]
+}
+
+model CollectionItem {
+  id            String        @id @default(uuid())
+  addedAt       DateTime      @default(now())
+
+  collectionId  String
+  collection    Collection    @relation(fields: [collectionId], references: [id])
+
+  productId     String
+  product       Product       @relation(fields: [productId], references: [id])
+}
+
+/// KOMENTARZE / SPOŁECZNOŚĆ
+model Comment {
+  id            String        @id @default(uuid())
+  content       String
+  createdAt     DateTime      @default(now())
+
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+
+  productId     String?
+  product       Product?      @relation(fields: [productId], references: [id])
+
+  auctionId     String?
+  auction       Auction?      @relation(fields: [auctionId], references: [id])
 }
