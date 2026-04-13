@@ -1,6 +1,3 @@
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
-export const revalidate = 0;
 import { supabaseServer } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
@@ -9,15 +6,15 @@ export default async function AdminPage() {
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
-    return <div className="p-10">Brak dostępu</div>;
+    return <div>Brak dostępu — nie jesteś zalogowana</div>;
   }
 
   const user = await prisma.user.findUnique({
     where: { id: data.user.id },
   });
 
-  if (user?.role !== "ADMIN") {
-    return <div className="p-10">Brak uprawnień</div>;
+  if (!user || user.role !== "ADMIN") {
+    return <div>Brak dostępu — brak roli ADMIN</div>;
   }
 
   return (
