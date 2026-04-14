@@ -12,9 +12,9 @@ export default function Home() {
           <a href="/aukcje" className="hover:text-gray-600 transition">Aukcje</a>
           <a href="/kolekcjonerstwo" className="hover:text-gray-600 transition">Kolekcjonerstwo</a>
           <a href="/spolecznosc" className="hover:text-gray-600 transition">Społeczność</a>
-          <button className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition">
+          <a href="/register" className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition text-decoration-none">
             <span className="text-xl">👤</span>
-          </button>
+          </a>
         </nav>
       </header>
 
