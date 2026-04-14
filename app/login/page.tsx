@@ -15,7 +15,7 @@ export default function LoginPage() {
     });
 
     if (error) {
-      alert("Błędny email lub hasło");
+      alert("Błąd logowania: " + error.message);
       return;
     }
 
