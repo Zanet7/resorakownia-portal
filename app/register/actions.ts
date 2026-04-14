@@ -25,17 +25,17 @@ export async function registerAdmin(formData: FormData) {
   }
 
   if (data.user) {
-    // 2. Po pomyślnej rejestracji, tworzymy zapis użytkownika w Prisma z rolą ADMIN
+    // 2. Po pomyślnej rejestracji, tworzymy zapis użytkownika w Prisma z rolą USER
     // w klauzuli upsert, na wypadek gdyby ktoś odświeżył
     await prisma.user.upsert({
       where: { id: data.user.id },
       update: {
-        role: "ADMIN",
+        role: "USER",
       },
       create: {
         id: data.user.id,
         email: data.user.email!,
-        role: "ADMIN",
+        role: "USER",
       },
     });
   }

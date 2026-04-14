@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabaseClient } from "@/lib/supabase/client";
+import { getUserRole } from "./actions";
 
 export default function LoginPage() {
   const supabase = supabaseClient();
@@ -19,7 +20,12 @@ export default function LoginPage() {
       return;
     }
 
-    window.location.href = "/admin";
+    const role = await getUserRole();
+    if (role === "ADMIN") {
+      window.location.href = "/admin";
+    } else {
+      window.location.href = "/";
+    }
   }
 
   return (
@@ -45,6 +51,15 @@ export default function LoginPage() {
       >
         Zaloguj
       </button>
+
+      <div className="mt-6 pt-4 border-t border-gray-200">
+        <p className="text-gray-600 text-sm">
+          Nie posiadasz jeszcze konta?{" "}
+          <a href="/register" className="text-blue-600 hover:underline">
+            Zarejestruj się
+          </a>
+        </p>
+      </div>
     </div>
   );
 }

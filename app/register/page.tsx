@@ -16,7 +16,7 @@ export default function RegisterPage() {
 
   return (
     <div className="max-w-md mx-auto mt-20">
-      <h1 className="text-2xl font-bold mb-4">Rejestracja Administratora</h1>
+      <h1 className="text-2xl font-bold mb-4">Rejestracja konta</h1>
       {error && <p className="text-red-500 mb-4">{error}</p>}
       
       <form action={onSubmit} className="flex flex-col space-y-4">
@@ -41,9 +41,14 @@ export default function RegisterPage() {
           Zarejestruj się
         </button>
       </form>
-      <p className="mt-4 text-sm text-gray-500">
-        To konto automatycznie otrzyma uprawnienia ADMIN niezbędne do wejścia na /admin.
-      </p>
+      <div className="mt-4 pt-4 border-t border-gray-200">
+        <p className="text-sm text-gray-600">
+          Masz już konto?{" "}
+          <a href="/login" className="text-blue-600 hover:underline">
+            Zaloguj się
+          </a>
+        </p>
+      </div>
     </div>
   );
 }
