@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 export async function registerAdmin(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const username = formData.get("username") as string;
 
   if (!email || !password) {
     return { error: "Email i hasło są wymagane" };
@@ -24,6 +25,9 @@ export async function registerAdmin(formData: FormData) {
     return { error: error.message };
   }
 
+  // Set default placeholder avatar based on username or email
+  const displayUsername = username?.trim() || email.split('@')[0];
+  
   if (data.user) {
     // 2. Po pomyślnej rejestracji, tworzymy zapis użytkownika w Prisma z rolą USER
     // w klauzuli upsert, na wypadek gdyby ktoś odświeżył
@@ -31,15 +35,17 @@ export async function registerAdmin(formData: FormData) {
       where: { id: data.user.id },
       update: {
         role: "USER",
+        username: displayUsername,
       },
       create: {
         id: data.user.id,
         email: data.user.email!,
         role: "USER",
+        username: displayUsername,
       },
     });
   }
 
-  // 3. Przekierowujemy na login
-  redirect("/login");
+  // 3. Zwracamy informację o sukcesie (przekierowanie w kliencie)
+  return { success: true };
 }

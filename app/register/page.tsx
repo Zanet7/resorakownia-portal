@@ -4,10 +4,12 @@ import { useState } from "react";
 import { registerAdmin } from "./actions";
 import Link from "next/link";
 import { Mail, Lock, UserPlus, Loader2, BadgePlus, ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   async function onSubmit(formData: FormData) {
     setError(null);
@@ -15,12 +17,12 @@ export default function RegisterPage() {
     
     try {
       const result = await registerAdmin(formData);
-      if (result && result.error) {
+      if (result?.error) {
         setError(result.error);
         setIsLoading(false);
       } else {
-         // Sukces, zakładamy że akcja może sama przekierowywać, jeśli nie...
-         // ale zgodnie ze starym kodem akcja prawdopodobnie robi redirect z NextJS'a.
+        router.push("/");
+        router.refresh();
       }
     } catch {
        setError("Wystąpił nieoczekiwany błąd. Spróbuj ponownie.");
@@ -64,6 +66,23 @@ export default function RegisterPage() {
           )}
 
           <form action={onSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Imię
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <UserPlus className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  name="username"
+                  type="text"
+                  placeholder="Twoje imię"
+                  className="appearance-none block w-full pl-11 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Adres e-mail <span className="text-red-500">*</span>
