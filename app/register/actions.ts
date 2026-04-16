@@ -29,21 +29,35 @@ export async function registerAdmin(formData: FormData) {
   const displayUsername = username?.trim() || email.split('@')[0];
   
   if (data.user) {
-    // 2. Po pomyślnej rejestracji, tworzymy zapis użytkownika w Prisma z rolą USER
-    // w klauzuli upsert, na wypadek gdyby ktoś odświeżył
-    await prisma.user.upsert({
-      where: { id: data.user.id },
-      update: {
-        role: "USER",
-        username: displayUsername,
-      },
-      create: {
-        id: data.user.id,
-        email: data.user.email!,
-        role: "USER",
-        username: displayUsername,
-      },
-    });
+    try {
+      // 2. Po pomyślnej rejestracji, tworzymy zapis użytkownika w Prisma z rolą USER
+      await prisma.user.upsert({
+        where: { id: data.user.id },
+        update: {
+          role: "USER",
+          // jeśli już istnieje, nie nadpisujemy username, żeby mu go nie zepsuć
+        },
+        create: {
+          id: data.user.id,
+          email: data.user.email!,
+          role: "USER",
+          username: displayUsername,
+        },
+      });
+    } catch (dbError: any) {
+      // W razie błędu o unikalność (username zajęte z innego konta) dodaj losowy suffix
+      const randomSuffix = Math.floor(Math.random() * 10000);
+      await prisma.user.upsert({
+        where: { id: data.user.id },
+        update: { role: "USER" },
+        create: {
+          id: data.user.id,
+          email: data.user.email!,
+          role: "USER",
+          username: `${displayUsername}${randomSuffix}`,
+        },
+      });
+    }
   }
 
   // 3. Zwracamy informację o sukcesie (przekierowanie w kliencie)
