@@ -4,12 +4,28 @@ export const revalidate = 0;
 
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { Search, SlidersHorizontal, ShoppingCart, Star, Heart, ArrowRight } from "lucide-react";
+import { Search, SlidersHorizontal, ShoppingCart } from "lucide-react";
+import ProductCard from "@/components/ProductCard";
+import { supabaseServer } from "@/lib/supabase/server";
 
 export default async function SklepPage() {
   const products = await prisma.product.findMany({
     orderBy: { createdAt: "desc" },
   });
+
+  const supabase = supabaseServer();
+  const { data: { user } } = await supabase.auth.getUser();
+  let userFavs: string[] = [];
+
+  if (user) {
+     const favColl = await prisma.collection.findFirst({
+        where: { userId: user.id, name: "Ulubione" },
+        include: { items: true }
+     });
+     if (favColl) {
+        userFavs = favColl.items.map(i => i.productId);
+     }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -121,58 +137,7 @@ export default async function SklepPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map((p) => (
-                <div key={p.id} className="bg-white group rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
-                  {/* Product Image Area */}
-                  <div className="relative aspect-square bg-gray-100 overflow-hidden p-4 flex items-center justify-center">
-                    {/* Tags */}
-                    {p.createdAt > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && (
-                      <div className="absolute top-4 left-4 z-10 bg-black text-white text-xs font-bold px-2.5 py-1 rounded-md tracking-wide">
-                        NOWOŚĆ
-                      </div>
-                    )}
-                    <button className="absolute top-4 right-4 z-10 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-white transition-all">
-                      <Heart className="w-4 h-4" />
-                    </button>
-                    
-                    {/* Image */}
-                    <img 
-                      src={p.imageUrl || "https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&q=80&w=800"} 
-                      alt={p.name} 
-                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-
-                  {/* Product Details */}
-                  <div className="p-5 flex-1 flex flex-col">
-                    <div className="flex justify-between items-start mb-2">
-                       <span className="text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-0.5 rounded uppercase tracking-wider">
-                          {p.brand || "ZBIORCZY"}
-                       </span>
-                       {p.scale && <span className="text-xs text-gray-500 font-medium">Skala {p.scale}</span>}
-                    </div>
-                    
-                    <h3 className="font-bold text-gray-900 text-lg leading-tight mb-2 line-clamp-2">
-                      {p.name}
-                    </h3>
-
-                    {/* Ratings mockup */}
-                    <div className="flex items-center gap-1 mb-4">
-                       {[...Array(5)].map((_, i) => (
-                         <Star key={i} className={`w-3.5 h-3.5 ${i < 4 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
-                       ))}
-                       <span className="text-xs text-gray-500 ml-1">(12)</span>
-                    </div>
-
-                    <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
-                      <div className="font-black text-xl text-gray-900">
-                        {Number(p.price).toFixed(2)} <span className="text-sm font-medium text-gray-500">zł</span>
-                      </div>
-                      <button className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center hover:bg-orange-500 hover:scale-110 transition-all shadow-md">
-                        <ShoppingCart className="w-4 h-4 mr-0.5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <ProductCard key={p.id} p={p} isFavInitial={userFavs.includes(p.id)} />
               ))}
             </div>
           )}

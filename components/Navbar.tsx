@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, User, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, User, LogOut, LayoutDashboard, ShoppingBag } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { useCart } from "./CartContext";
 
 export default function Navbar({ username, isAdmin }: { username?: string | null; isAdmin?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const router = useRouter();
+  const { cartCount, setIsCartOpen } = useCart();
 
   const handleLogout = async () => {
     const supabase = supabaseClient();
@@ -36,7 +38,22 @@ export default function Navbar({ username, isAdmin }: { username?: string | null
         </nav>
 
         {/* Right side - User & Mobile toggle */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
+          
+          {/* Cart Button */}
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className="relative w-10 h-10 rounded-full bg-orange-50/50 border border-transparent hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 transition-all text-gray-600 flex items-center justify-center focus:outline-none"
+            aria-label="Koszyk"
+          >
+            <ShoppingBag className="w-5 h-5" />
+            {cartCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-orange-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full ring-2 ring-white">
+                {cartCount}
+              </span>
+            )}
+          </button>
+
           {username ? (
             <div className="relative">
               <button 

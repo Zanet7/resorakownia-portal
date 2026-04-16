@@ -9,6 +9,9 @@ export const metadata = {
   description: "Sklep, aukcje i społeczność kolekcjonerów modeli aut",
 };
 
+import { CartProvider } from "@/components/CartContext";
+import CartDrawer from "@/components/CartDrawer";
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
@@ -24,9 +27,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="pl">
       <body>
-        <Navbar username={dbUser?.username} isAdmin={dbUser?.role === 'ADMIN'} />
-        <main className="min-h-screen">{children}</main>
-        <Footer />
+        <CartProvider>
+          <Navbar username={dbUser?.username} isAdmin={dbUser?.role === 'ADMIN'} />
+          <CartDrawer />
+          <main className="min-h-screen">{children}</main>
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );
