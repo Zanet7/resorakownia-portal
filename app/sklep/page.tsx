@@ -12,7 +12,11 @@ import { supabaseServer } from "@/lib/supabase/server";
 export default async function SklepPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const resolvedParams = await searchParams;
   const q = typeof resolvedParams?.q === 'string' ? resolvedParams.q : '';
-  const brandParam = resolvedParams?.brand;
+  
+  const categoryParam = resolvedParams?.categoryId;
+  const categoryList = categoryParam ? (Array.isArray(categoryParam) ? categoryParam : [categoryParam]) : [];
+  
+  const brandParam = resolvedParams?.brandId;
   const brandList = brandParam ? (Array.isArray(brandParam) ? brandParam : [brandParam]) : [];
   
   const scaleParam = resolvedParams?.scale;
@@ -27,12 +31,14 @@ export default async function SklepPage({ searchParams }: { searchParams: Promis
   if (q) {
     where.OR = [
       { name: { contains: q, mode: 'insensitive' } },
-      { brand: { contains: q, mode: 'insensitive' } },
       { scale: { contains: q, mode: 'insensitive' } }
     ];
   }
+  if (categoryList.length > 0) {
+    where.categoryId = { in: categoryList };
+  }
   if (brandList.length > 0) {
-    where.brand = { in: brandList };
+    where.brandId = { in: brandList };
   }
   if (scaleList.length > 0) {
     where.scale = { in: scaleList };
@@ -48,12 +54,16 @@ export default async function SklepPage({ searchParams }: { searchParams: Promis
   if (sort === 'price-asc') orderBy = { price: "asc" };
   else if (sort === 'price-desc') orderBy = { price: "desc" };
 
-  const hasFilters = q !== '' || brandList.length > 0 || scaleList.length > 0 || min !== undefined || max !== undefined || sort !== 'newest';
+  const hasFilters = q !== '' || categoryList.length > 0 || brandList.length > 0 || scaleList.length > 0 || min !== undefined || max !== undefined || sort !== 'newest';
 
   const products = await prisma.product.findMany({
     where,
     orderBy,
+    include: { brand: true, category: true }
   });
+
+  const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
+  const brands = await prisma.brand.findMany({ orderBy: { name: 'asc' } });
 
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
@@ -128,15 +138,28 @@ export default async function SklepPage({ searchParams }: { searchParams: Promis
               )}
             </div>
             
-            {/* Filter Categories */}
+            {/* Filter Categories and Brands */}
             <div className="space-y-6">
+              
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Kategorie</h3>
                 <div className="space-y-2">
-                  {['Hot Wheels', 'Matchbox', 'Majorette', 'Siku', 'Premium'].map((cat) => (
-                    <label key={cat} className="flex items-center gap-3 cursor-pointer group">
-                      <input type="checkbox" name="brand" value={cat} defaultChecked={brandList.includes(cat)} className="w-5 h-5 border-gray-300 rounded text-orange-500 focus:ring-orange-500 cursor-pointer" />
-                      <span className="text-gray-600 group-hover:text-gray-900 transition-colors">{cat}</span>
+                  {categories.map((cat) => (
+                    <label key={cat.id} className="flex items-center gap-3 cursor-pointer group">
+                      <input type="checkbox" name="categoryId" value={cat.id} defaultChecked={categoryList.includes(cat.id)} className="w-5 h-5 border-gray-300 rounded text-orange-500 focus:ring-orange-500 cursor-pointer" />
+                      <span className="text-gray-600 group-hover:text-gray-900 transition-colors">{cat.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-gray-100">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Marka</h3>
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                  {brands.map((b) => (
+                    <label key={b.id} className="flex items-center gap-3 cursor-pointer group">
+                      <input type="checkbox" name="brandId" value={b.id} defaultChecked={brandList.includes(b.id)} className="w-5 h-5 border-gray-300 rounded text-orange-500 focus:ring-orange-500 cursor-pointer" />
+                      <span className="text-gray-600 group-hover:text-gray-900 transition-colors text-sm">{b.name}</span>
                     </label>
                   ))}
                 </div>

@@ -2,11 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, PackagePlus, Info, DollarSign, Ruler, Car, Image as ImageIcon, Sparkles, Save } from "lucide-react";
+import { ArrowLeft, PackagePlus, Info, DollarSign, Ruler, Car, Image as ImageIcon, Sparkles, Save, FolderTree, Tags, Plus } from "lucide-react";
+import { createAttribute } from "@/app/admin/attributes/actions";
+import { useRouter } from "next/navigation";
 
-export default function ProductForm({ initialData, actionFn, title, subtitle }: { initialData?: any, actionFn: (formData: FormData) => Promise<any>, title: string, subtitle: string }) {
+export default function ProductForm({ initialData, categories = [], brands = [], actionFn, title, subtitle }: { initialData?: any, categories?: any[], brands?: any[], actionFn: (formData: FormData) => Promise<any>, title: string, subtitle: string }) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Modale do dodawania słowników w locie
+  const [showCatModal, setShowCatModal] = useState(false);
+  const [showBrandModal, setShowBrandModal] = useState(false);
+  const [newAttrError, setNewAttrError] = useState("");
+  const router = useRouter();
 
   async function handleAction(formData: FormData) {
     if (initialData) formData.append("id", initialData.id);
@@ -22,6 +30,23 @@ export default function ProductForm({ initialData, actionFn, title, subtitle }: 
     } catch (e: any) {
       setError(e.message || "Wystąpił nieoczekiwany błąd");
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleAddAttribute(e: React.FormEvent<HTMLFormElement>, type: "category" | "brand") {
+    e.preventDefault();
+    setNewAttrError("");
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    formData.append("type", type);
+    
+    const result = await createAttribute(formData);
+    if (result.error) {
+      setNewAttrError(result.error);
+    } else {
+      setShowCatModal(false);
+      setShowBrandModal(false);
+      router.refresh();
     }
   }
 
@@ -44,7 +69,9 @@ export default function ProductForm({ initialData, actionFn, title, subtitle }: 
       </div>
 
       <div className="max-w-3xl mx-auto px-6 lg:px-8 py-10 mt-4">
-        <div className={`bg-gradient-to-r ${initialData ? 'from-purple-600 to-indigo-600' : 'from-blue-600 to-indigo-600'} rounded-2xl p-8 mb-8 text-white relative overflow-hidden shadow-lg`}>
+        
+        {/* Banner */}
+        <div className={`bg-gradient-to-r ${initialData ? 'from-purple-600 to-indigo-600' : 'from-blue-600 to-indigo-600'} rounded-2xl p-8 mb-8 text-white relative overflow-hidden shadow-lg shadow-blue-900/20`}>
           <div className="relative z-10 pr-24">
             <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
               <Sparkles className="w-6 h-6 text-white/80" />
@@ -63,6 +90,7 @@ export default function ProductForm({ initialData, actionFn, title, subtitle }: 
         )}
 
         <form action={handleAction} className="space-y-8">
+          
           <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-6 border-b border-gray-100 pb-4">Podstawowe informacje</h3>
             
@@ -85,14 +113,49 @@ export default function ProductForm({ initialData, actionFn, title, subtitle }: 
                 </div>
               </div>
 
+              {/* SŁOWNIKI */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Marka producenta</label>
-                <input
-                  name="brand"
-                  defaultValue={initialData?.brand || ""}
-                  placeholder="np. Hot Wheels, Matchbox"
-                  className="w-full border border-gray-300 rounded-xl py-3 px-4 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all"
-                />
+                <label className="flex items-center justify-between text-sm font-medium text-gray-700 mb-1.5">
+                  Marka producenta
+                  <button type="button" onClick={() => setShowBrandModal(true)} className="text-blue-600 hover:text-blue-800 flex items-center text-xs font-bold gap-1 bg-blue-50 px-2 py-1 rounded">
+                    <Plus className="w-3 h-3" /> Dodaj
+                  </button>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Tags className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <select
+                    name="brandId"
+                    defaultValue={initialData?.brandId || ""}
+                    className="w-full border border-gray-300 rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all appearance-none cursor-pointer bg-white"
+                  >
+                    <option value="">-- Wybierz lub zostaw puste --</option>
+                    {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="flex items-center justify-between text-sm font-medium text-gray-700 mb-1.5">
+                  Kategoria
+                  <button type="button" onClick={() => setShowCatModal(true)} className="text-blue-600 hover:text-blue-800 flex items-center text-xs font-bold gap-1 bg-blue-50 px-2 py-1 rounded">
+                    <Plus className="w-3 h-3" /> Dodaj
+                  </button>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FolderTree className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <select
+                    name="categoryId"
+                    defaultValue={initialData?.categoryId || ""}
+                    className="w-full border border-gray-300 rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all appearance-none cursor-pointer bg-white"
+                  >
+                    <option value="">-- Wybierz lub zostaw puste --</option>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
               </div>
 
               <div>
@@ -188,6 +251,41 @@ export default function ProductForm({ initialData, actionFn, title, subtitle }: 
           </div>
         </form>
       </div>
+
+      {/* MODAL KATEGORII */}
+      {showCatModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+           <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-xl">
+              <h3 className="font-bold text-lg mb-4">Nowa kategoria</h3>
+              {newAttrError && <p className="text-red-500 text-sm mb-4">{newAttrError}</p>}
+              <form onSubmit={e => handleAddAttribute(e, "category")}>
+                 <input autoFocus name="name" required placeholder="np. Wyścigowe..." className="w-full border rounded-xl p-3 outline-none focus:ring-2 focus:ring-black mb-4"/>
+                 <div className="flex gap-2 justify-end">
+                    <button type="button" onClick={() => setShowCatModal(false)} className="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100">Anuluj</button>
+                    <button type="submit" className="px-5 py-2 bg-black text-white rounded-xl">Dodaj</button>
+                 </div>
+              </form>
+           </div>
+        </div>
+      )}
+
+      {/* MODAL MARKI */}
+      {showBrandModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+           <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-xl">
+              <h3 className="font-bold text-lg mb-4">Nowa marka</h3>
+              {newAttrError && <p className="text-red-500 text-sm mb-4">{newAttrError}</p>}
+              <form onSubmit={e => handleAddAttribute(e, "brand")}>
+                 <input autoFocus name="name" required placeholder="np. Welly..." className="w-full border rounded-xl p-3 outline-none focus:ring-2 focus:ring-black mb-4"/>
+                 <div className="flex gap-2 justify-end">
+                    <button type="button" onClick={() => setShowBrandModal(false)} className="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100">Anuluj</button>
+                    <button type="submit" className="px-5 py-2 bg-black text-white rounded-xl">Dodaj</button>
+                 </div>
+              </form>
+           </div>
+        </div>
+      )}
+
     </div>
   );
 }

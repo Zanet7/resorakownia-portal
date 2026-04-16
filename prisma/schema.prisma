@@ -35,13 +35,18 @@ model User {
 model Product {
   id            String        @id @default(uuid())
   name          String
-  brand         String?
   scale         String?       // ← DODANE: Wielkość/Skala (np. 1:64)
   year          Int?
   description   String?
   imageUrl      String?
   price         Decimal       @db.Decimal(10,2)
   createdAt     DateTime      @default(now())
+
+  categoryId    String?
+  category      Category?     @relation(fields: [categoryId], references: [id])
+
+  brandId       String?
+  brand         Brand?        @relation(fields: [brandId], references: [id])
 
   ownerId       String
   owner         User          @relation(fields: [ownerId], references: [id])
@@ -175,4 +180,21 @@ model Comment {
 
   auctionId     String?
   auction       Auction?      @relation(fields: [auctionId], references: [id])
+}
+
+/// SŁOWNIKI
+model Category {
+  id            String        @id @default(uuid())
+  name          String        @unique
+  createdAt     DateTime      @default(now())
+
+  products      Product[]
+}
+
+model Brand {
+  id            String        @id @default(uuid())
+  name          String        @unique
+  createdAt     DateTime      @default(now())
+
+  products      Product[]
 }

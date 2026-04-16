@@ -21,7 +21,8 @@ export async function createProduct(formData: FormData) {
   }
 
   const name = formData.get("name") as string;
-  const brand = formData.get("brand") as string;
+  const brandId = formData.get("brandId") as string;
+  const categoryId = formData.get("categoryId") as string;
   const scale = formData.get("scale") as string;
   const priceString = formData.get("price") as string;
   const description = formData.get("description") as string;
@@ -44,7 +45,8 @@ export async function createProduct(formData: FormData) {
   await prisma.product.create({
     data: {
       name,
-      brand,
+      brandId: brandId ? brandId : null,
+      categoryId: categoryId ? categoryId : null,
       scale,
       price,
       description,
@@ -75,7 +77,8 @@ export async function updateProduct(formData: FormData) {
 
   const id = formData.get("id") as string;
   const name = formData.get("name") as string;
-  const brand = formData.get("brand") as string;
+  const brandId = formData.get("brandId") as string;
+  const categoryId = formData.get("categoryId") as string;
   const scale = formData.get("scale") as string;
   const priceString = formData.get("price") as string;
   const description = formData.get("description") as string;
@@ -102,7 +105,8 @@ export async function updateProduct(formData: FormData) {
     where: { id },
     data: {
       name,
-      brand,
+      brandId: brandId ? brandId : null,
+      categoryId: categoryId ? categoryId : null,
       scale,
       price,
       description,

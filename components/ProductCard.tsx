@@ -61,7 +61,7 @@ export default function ProductCard({ p, isFavInitial }: { p: any, isFavInitial:
       <div className="p-5 flex-1 flex flex-col">
         <div className="flex justify-between items-start mb-2">
             <span className="text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-0.5 rounded uppercase tracking-wider">
-              {p.brand || "ZBIORCZY"}
+              {p.brand?.name || "ZBIORCZY"}
             </span>
             {p.scale && <span className="text-xs text-gray-500 font-medium">Skala {p.scale}</span>}
         </div>

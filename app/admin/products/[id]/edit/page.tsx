@@ -22,9 +22,14 @@ export default async function AdminProductEditPage({ params }: { params: Promise
     price: Number(product.price)
   };
 
+  const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
+  const brands = await prisma.brand.findMany({ orderBy: { name: 'asc' } });
+
   return (
     <ProductForm 
       initialData={plainProduct}
+      categories={categories}
+      brands={brands}
       actionFn={updateProduct} 
       title="Edytuj produkt" 
       subtitle="Wprowadź zmiany w szczegółach produktu i zapisz, aby uaktualnić ofertę w sklepie." 
