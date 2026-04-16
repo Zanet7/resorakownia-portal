@@ -18,7 +18,15 @@ export async function getCart() {
     orderBy: { addedAt: "desc" }
   });
 
-  return { items };
+  const formattedItems = items.map(item => ({
+    ...item,
+    product: {
+      ...item.product,
+      price: Number(item.product.price)
+    }
+  }));
+
+  return { items: formattedItems };
 }
 
 export async function addToCart(productId: string) {

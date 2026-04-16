@@ -137,7 +137,9 @@ export default async function ProductsPage() {
                       <td className="py-4 px-6 text-right">
                         {/* Placeholder for actions like edit/delete */}
                         <div className="inline-flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="text-sm font-medium text-blue-600 hover:text-blue-800">Edytuj</button>
+                          <Link href={`/admin/products/${p.id}/edit`} className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                            Edytuj
+                          </Link>
                         </div>
                       </td>
                     </tr>

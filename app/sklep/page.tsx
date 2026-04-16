@@ -6,11 +6,53 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Search, SlidersHorizontal, ShoppingCart } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
+import SortSelect from "@/components/SortSelect";
 import { supabaseServer } from "@/lib/supabase/server";
 
-export default async function SklepPage() {
+export default async function SklepPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const resolvedParams = await searchParams;
+  const q = typeof resolvedParams?.q === 'string' ? resolvedParams.q : '';
+  const brandParam = resolvedParams?.brand;
+  const brandList = brandParam ? (Array.isArray(brandParam) ? brandParam : [brandParam]) : [];
+  
+  const scaleParam = resolvedParams?.scale;
+  const scaleList = scaleParam ? (Array.isArray(scaleParam) ? scaleParam : [scaleParam]) : [];
+
+  const min = typeof resolvedParams?.min === 'string' ? Number(resolvedParams.min) : undefined;
+  const max = typeof resolvedParams?.max === 'string' ? Number(resolvedParams.max) : undefined;
+  const sort = typeof resolvedParams?.sort === 'string' ? resolvedParams.sort : 'newest';
+
+  // Build the DB 'where' object dynamically
+  let where: any = {};
+  if (q) {
+    where.OR = [
+      { name: { contains: q, mode: 'insensitive' } },
+      { brand: { contains: q, mode: 'insensitive' } },
+      { scale: { contains: q, mode: 'insensitive' } }
+    ];
+  }
+  if (brandList.length > 0) {
+    where.brand = { in: brandList };
+  }
+  if (scaleList.length > 0) {
+    where.scale = { in: scaleList };
+  }
+  if (min !== undefined && !isNaN(min)) {
+    where.price = { ...where.price, gte: min };
+  }
+  if (max !== undefined && !isNaN(max)) {
+    where.price = { ...where.price, lte: max };
+  }
+
+  let orderBy: any = { createdAt: "desc" };
+  if (sort === 'price-asc') orderBy = { price: "asc" };
+  else if (sort === 'price-desc') orderBy = { price: "desc" };
+
+  const hasFilters = q !== '' || brandList.length > 0 || scaleList.length > 0 || min !== undefined || max !== undefined || sort !== 'newest';
+
   const products = await prisma.product.findMany({
-    orderBy: { createdAt: "desc" },
+    where,
+    orderBy,
   });
 
   const supabase = supabaseServer();
@@ -48,25 +90,30 @@ export default async function SklepPage() {
             </p>
             
             {/* Search Bar */}
-            <div className="flex w-full max-w-lg items-center bg-white border border-gray-300 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-orange-500 focus-within:border-orange-500 overflow-hidden transition-all">
+            <form key={JSON.stringify(resolvedParams) + "search"} action="/sklep" method="GET" className="flex w-full max-w-lg items-center bg-white border border-gray-300 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-orange-500 focus-within:border-orange-500 overflow-hidden transition-all">
               <div className="pl-4 text-gray-400">
                 <Search className="w-5 h-5" />
               </div>
               <input 
                 type="text" 
+                name="q"
+                defaultValue={q}
                 placeholder="Szukaj marki, modelu, skali..." 
                 className="w-full py-3 px-4 outline-none text-gray-700 bg-transparent"
               />
-              <button className="bg-black text-white px-6 py-3 font-medium hover:bg-gray-800 transition-colors">
+              <button type="submit" className="bg-black text-white px-6 py-3 font-medium hover:bg-gray-800 transition-colors">
                 Szukaj
               </button>
-            </div>
+            </form>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12 w-full flex-1 flex flex-col md:flex-row gap-8">
+      <form key={JSON.stringify(resolvedParams) + "filters"} action="/sklep" method="GET" className="max-w-7xl mx-auto px-6 lg:px-8 py-12 w-full flex-1 flex flex-col md:flex-row gap-8">
         
+        {/* Hidden field to keep Q when applying sidebar filters */}
+        {q && <input type="hidden" name="q" value={q} />}
+
         {/* Sidebar Filters */}
         <div className="w-full md:w-64 shrink-0">
           <div className="bg-white rounded-2xl border border-gray-200 p-6 sticky top-24 shadow-sm">
@@ -74,6 +121,11 @@ export default async function SklepPage() {
               <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <SlidersHorizontal className="w-5 h-5" /> Filtry
               </h2>
+              {hasFilters && (
+                <Link href="/sklep" className="text-sm font-semibold text-orange-600 hover:text-orange-700 transition-colors">
+                  Wyczyść
+                </Link>
+              )}
             </div>
             
             {/* Filter Categories */}
@@ -83,9 +135,7 @@ export default async function SklepPage() {
                 <div className="space-y-2">
                   {['Hot Wheels', 'Matchbox', 'Majorette', 'Siku', 'Premium'].map((cat) => (
                     <label key={cat} className="flex items-center gap-3 cursor-pointer group">
-                      <div className="w-5 h-5 border border-gray-300 rounded overflow-hidden flex items-center justify-center pt-0.5 group-hover:border-orange-500 transition-colors">
-                        {/* Custom checkbox styling can go here */}
-                      </div>
+                      <input type="checkbox" name="brand" value={cat} defaultChecked={brandList.includes(cat)} className="w-5 h-5 border-gray-300 rounded text-orange-500 focus:ring-orange-500 cursor-pointer" />
                       <span className="text-gray-600 group-hover:text-gray-900 transition-colors">{cat}</span>
                     </label>
                   ))}
@@ -95,35 +145,39 @@ export default async function SklepPage() {
               <div className="pt-6 border-t border-gray-100">
                 <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Skala</h3>
                 <div className="flex flex-wrap gap-2">
-                  {['1:64', '1:43', '1:18', 'Inne'].map((scale) => (
-                    <button key={scale} className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-black hover:text-black transition-all">
+                  {['1:64', '1:43', '1:18'].map((scale) => (
+                    <label key={scale} className={`px-3 py-1.5 border rounded-lg text-sm transition-all cursor-pointer ${scaleList.includes(scale) ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600 hover:border-black hover:text-black'}`}>
+                      <input type="checkbox" name="scale" value={scale} defaultChecked={scaleList.includes(scale)} className="sr-only" />
                       {scale}
-                    </button>
+                    </label>
                   ))}
                 </div>
               </div>
 
               <div className="pt-6 border-t border-gray-100">
-                <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Cena</h3>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Cena (zł)</h3>
                 <div className="flex items-center gap-2">
-                  <input type="number" placeholder="Min" className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm outline-none focus:border-gray-400" />
+                  <input type="number" name="min" defaultValue={min} placeholder="Od" className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm outline-none focus:border-gray-400" />
                   <span className="text-gray-400">-</span>
-                  <input type="number" placeholder="Max" className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm outline-none focus:border-gray-400" />
+                  <input type="number" name="max" defaultValue={max} placeholder="Do" className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm outline-none focus:border-gray-400" />
                 </div>
               </div>
+
+              <button type="submit" className="w-full mt-4 bg-orange-500 text-white font-bold py-3.5 rounded-xl hover:bg-orange-600 transition-colors shadow-md">
+                Zastosuj filtry
+              </button>
             </div>
           </div>
         </div>
 
         {/* Product Grid */}
         <div className="flex-1">
-          <div className="mb-6 flex justify-between items-center">
+          <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <p className="text-gray-500 font-medium">Znaleziono {products.length} produktów</p>
-            <select className="bg-white border border-gray-200 text-gray-700 py-2 px-4 rounded-lg outline-none focus:ring-2 focus:ring-black/5 text-sm font-medium cursor-pointer">
-              <option>Od najnowszych</option>
-              <option>Cena: rosnąco</option>
-              <option>Cena: malejąco</option>
-            </select>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-500">Sortuj:</span>
+              <SortSelect currentSort={sort} />
+            </div>
           </div>
 
           {products.length === 0 ? (
@@ -137,12 +191,12 @@ export default async function SklepPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map((p) => (
-                <ProductCard key={p.id} p={p} isFavInitial={userFavs.includes(p.id)} />
+                <ProductCard key={p.id} p={{...p, price: Number(p.price)}} isFavInitial={userFavs.includes(p.id)} />
               ))}
             </div>
           )}
         </div>
-      </div>
+      </form>
     </div>
   );
 }
