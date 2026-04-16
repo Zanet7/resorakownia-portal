@@ -243,7 +243,7 @@ export default async function Home() {
       <footer className="w-full bg-white border-t border-gray-100 py-12 px-6 lg:px-8 mt-10">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <Link href="/">
-            <img src="/logo.png" alt="Resorakownia logo" className="h-10 w-auto opacity-70 hover:opacity-100 transition-opacity" />
+            <img src="/logo.png" alt="Resorakownia logo" className="h-12 md:h-16 w-auto opacity-70 hover:opacity-100 transition-opacity" />
           </Link>
           
           <div className="flex gap-8 text-sm font-medium text-gray-500">

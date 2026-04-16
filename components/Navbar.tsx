@@ -24,7 +24,7 @@ export default function Navbar({ username, isAdmin }: { username?: string | null
       <div className="max-w-7xl mx-auto flex items-center justify-between h-20 px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 shrink-0">
-          <img src="/logo.png" alt="Resorakownia logo" className="h-10 md:h-12 w-auto" />
+          <img src="/logo.png" alt="Resorakownia logo" className="h-12 md:h-16 w-auto" />
         </Link>
 
         {/* Desktop Nav */}
