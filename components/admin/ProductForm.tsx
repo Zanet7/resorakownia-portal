@@ -2,51 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, PackagePlus, Info, DollarSign, Ruler, Car, Image as ImageIcon, Sparkles, Save, FolderTree, Tags, Plus } from "lucide-react";
-import { createAttribute } from "@/app/admin/attributes/actions";
-import { useRouter } from "next/navigation";
+import { ArrowLeft, PackagePlus, Info, DollarSign, Ruler, Car, Image as ImageIcon, Sparkles, Save, FolderTree, Tags } from "lucide-react";
 
 export default function ProductForm({ initialData, categories = [], brands = [], actionFn, title, subtitle }: { initialData?: any, categories?: any[], brands?: any[], actionFn: (formData: FormData) => Promise<any>, title: string, subtitle: string }) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Modale do dodawania słowników w locie
-  const [showCatModal, setShowCatModal] = useState(false);
-  const [showBrandModal, setShowBrandModal] = useState(false);
-  const [newAttrError, setNewAttrError] = useState("");
-  const router = useRouter();
-
-  async function handleAction(formData: FormData) {
-    if (initialData) formData.append("id", initialData.id);
-    
-    setError(null);
-    setIsSubmitting(true);
-    try {
-      const result = await actionFn(formData);
-      if (result && result.error) {
-        setError(result.error);
-        setIsSubmitting(false);
-      }
     } catch (e: any) {
       setError(e.message || "Wystąpił nieoczekiwany błąd");
       setIsSubmitting(false);
-    }
-  }
-
-  async function handleAddAttribute(e: React.FormEvent<HTMLFormElement>, type: "category" | "brand") {
-    e.preventDefault();
-    setNewAttrError("");
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    formData.append("type", type);
-    
-    const result = await createAttribute(formData);
-    if (result.error) {
-      setNewAttrError(result.error);
-    } else {
-      setShowCatModal(false);
-      setShowBrandModal(false);
-      router.refresh();
     }
   }
 
@@ -115,11 +79,8 @@ export default function ProductForm({ initialData, categories = [], brands = [],
 
               {/* SŁOWNIKI */}
               <div>
-                <label className="flex items-center justify-between text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Marka producenta
-                  <button type="button" onClick={() => setShowBrandModal(true)} className="text-blue-600 hover:text-blue-800 flex items-center text-xs font-bold gap-1 bg-blue-50 px-2 py-1 rounded">
-                    <Plus className="w-3 h-3" /> Dodaj
-                  </button>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -137,11 +98,8 @@ export default function ProductForm({ initialData, categories = [], brands = [],
               </div>
 
               <div>
-                <label className="flex items-center justify-between text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Kategoria
-                  <button type="button" onClick={() => setShowCatModal(true)} className="text-blue-600 hover:text-blue-800 flex items-center text-xs font-bold gap-1 bg-blue-50 px-2 py-1 rounded">
-                    <Plus className="w-3 h-3" /> Dodaj
-                  </button>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -251,41 +209,6 @@ export default function ProductForm({ initialData, categories = [], brands = [],
           </div>
         </form>
       </div>
-
-      {/* MODAL KATEGORII */}
-      {showCatModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-           <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-xl">
-              <h3 className="font-bold text-lg mb-4">Nowa kategoria</h3>
-              {newAttrError && <p className="text-red-500 text-sm mb-4">{newAttrError}</p>}
-              <form onSubmit={e => handleAddAttribute(e, "category")}>
-                 <input autoFocus name="name" required placeholder="np. Wyścigowe..." className="w-full border rounded-xl p-3 outline-none focus:ring-2 focus:ring-black mb-4"/>
-                 <div className="flex gap-2 justify-end">
-                    <button type="button" onClick={() => setShowCatModal(false)} className="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100">Anuluj</button>
-                    <button type="submit" className="px-5 py-2 bg-black text-white rounded-xl">Dodaj</button>
-                 </div>
-              </form>
-           </div>
-        </div>
-      )}
-
-      {/* MODAL MARKI */}
-      {showBrandModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-           <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-xl">
-              <h3 className="font-bold text-lg mb-4">Nowa marka</h3>
-              {newAttrError && <p className="text-red-500 text-sm mb-4">{newAttrError}</p>}
-              <form onSubmit={e => handleAddAttribute(e, "brand")}>
-                 <input autoFocus name="name" required placeholder="np. Welly..." className="w-full border rounded-xl p-3 outline-none focus:ring-2 focus:ring-black mb-4"/>
-                 <div className="flex gap-2 justify-end">
-                    <button type="button" onClick={() => setShowBrandModal(false)} className="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100">Anuluj</button>
-                    <button type="submit" className="px-5 py-2 bg-black text-white rounded-xl">Dodaj</button>
-                 </div>
-              </form>
-           </div>
-        </div>
-      )}
-
     </div>
   );
 }

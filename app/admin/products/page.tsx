@@ -36,6 +36,7 @@ export default async function ProductsPage() {
 
   const products = await prisma.product.findMany({
     orderBy: { createdAt: "desc" },
+    include: { brand: true }
   });
 
   return (
@@ -55,13 +56,21 @@ export default async function ProductsPage() {
             </div>
           </div>
           
-          <Link
-            href="/admin/products/new"
-            className="inline-flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-medium hover:bg-gray-800 transition-colors shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Dodaj produkt
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/admin/attributes"
+              className="inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-5 py-2.5 rounded-xl font-medium hover:bg-gray-50 transition-colors shadow-sm"
+            >
+              Zarządzaj słownikami
+            </Link>
+            <Link
+              href="/admin/products/new"
+              className="inline-flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-medium hover:bg-gray-800 transition-colors shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Dodaj produkt
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -115,7 +124,7 @@ export default async function ProductsPage() {
                       <td className="py-4 px-6">
                         {p.brand ? (
                           <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-gray-100 text-gray-800 text-xs font-medium">
-                            {p.brand}
+                            {p.brand.name}
                           </span>
                         ) : (
                           <span className="text-gray-400 text-sm">—</span>
