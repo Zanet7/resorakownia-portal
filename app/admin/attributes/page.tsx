@@ -3,8 +3,8 @@ export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import { supabaseServer } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, Plus, Trash2, Tags, Layers } from "lucide-react";
-import { createAttribute, deleteAttribute } from "./actions";
+import { ArrowLeft, BookOpen, Plus, Trash2, Tags, Layers, ChevronUp, ChevronDown } from "lucide-react";
+import { createAttribute, deleteAttribute, moveAttribute } from "./actions";
 
 export default async function AdminAttributesPage() {
   const supabase = supabaseServer();
@@ -14,8 +14,8 @@ export default async function AdminAttributesPage() {
     return <div className="p-10">Brak dostępu</div>;
   }
 
-  const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
-  const brands = await prisma.brand.findMany({ orderBy: { name: 'asc' } });
+  const categories = await prisma.category.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] });
+  const brands = await prisma.brand.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] });
 
   return (
     <div className="min-h-screen bg-gray-50/50 pb-20">
@@ -61,13 +61,31 @@ export default async function AdminAttributesPage() {
               {brands.map(b => (
                  <li key={b.id} className="flex flex-row items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-xl">
                    <span className="font-medium text-gray-800">{b.name}</span>
-                   <form action={deleteAttribute}>
-                      <input type="hidden" name="id" value={b.id} />
-                      <input type="hidden" name="type" value="brand" />
-                      <button type="submit" className="text-gray-400 hover:text-red-500 p-1 transition-colors" title="Usuń wolną markę">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                   </form>
+                   <div className="flex gap-1">
+                     <form action={moveAttribute} className="flex">
+                        <input type="hidden" name="id" value={b.id} />
+                        <input type="hidden" name="type" value="brand" />
+                        <input type="hidden" name="direction" value="up" />
+                        <button type="submit" className="text-gray-400 hover:text-black p-1 transition-colors" title="W górę">
+                          <ChevronUp className="w-4 h-4" />
+                        </button>
+                     </form>
+                     <form action={moveAttribute} className="flex">
+                        <input type="hidden" name="id" value={b.id} />
+                        <input type="hidden" name="type" value="brand" />
+                        <input type="hidden" name="direction" value="down" />
+                        <button type="submit" className="text-gray-400 hover:text-black p-1 transition-colors" title="W dół">
+                          <ChevronDown className="w-4 h-4" />
+                        </button>
+                     </form>
+                     <form action={deleteAttribute} className="flex">
+                        <input type="hidden" name="id" value={b.id} />
+                        <input type="hidden" name="type" value="brand" />
+                        <button type="submit" className="text-gray-400 hover:text-red-500 p-1 transition-colors" title="Usuń wolną markę">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                     </form>
+                   </div>
                  </li>
               ))}
               {brands.length === 0 && <p className="text-sm text-gray-400 italic">Brak marek w słowniku.</p>}
@@ -98,13 +116,31 @@ export default async function AdminAttributesPage() {
               {categories.map(c => (
                  <li key={c.id} className="flex flex-row items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-xl">
                    <span className="font-medium text-gray-800">{c.name}</span>
-                   <form action={deleteAttribute}>
-                      <input type="hidden" name="id" value={c.id} />
-                      <input type="hidden" name="type" value="category" />
-                      <button type="submit" className="text-gray-400 hover:text-red-500 p-1 transition-colors" title="Usuń wolną kategorię">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                   </form>
+                   <div className="flex gap-1">
+                     <form action={moveAttribute} className="flex">
+                        <input type="hidden" name="id" value={c.id} />
+                        <input type="hidden" name="type" value="category" />
+                        <input type="hidden" name="direction" value="up" />
+                        <button type="submit" className="text-gray-400 hover:text-black p-1 transition-colors" title="W górę">
+                          <ChevronUp className="w-4 h-4" />
+                        </button>
+                     </form>
+                     <form action={moveAttribute} className="flex">
+                        <input type="hidden" name="id" value={c.id} />
+                        <input type="hidden" name="type" value="category" />
+                        <input type="hidden" name="direction" value="down" />
+                        <button type="submit" className="text-gray-400 hover:text-black p-1 transition-colors" title="W dół">
+                          <ChevronDown className="w-4 h-4" />
+                        </button>
+                     </form>
+                     <form action={deleteAttribute} className="flex">
+                        <input type="hidden" name="id" value={c.id} />
+                        <input type="hidden" name="type" value="category" />
+                        <button type="submit" className="text-gray-400 hover:text-red-500 p-1 transition-colors" title="Usuń wolną kategorię">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                     </form>
+                   </div>
                  </li>
               ))}
               {categories.length === 0 && <p className="text-sm text-gray-400 italic">Brak kategorii w słowniku.</p>}

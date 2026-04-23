@@ -74,3 +74,46 @@ export async function deleteAttribute(formData: FormData) {
     console.error("Delete action error:", error);
   }
 }
+
+export async function moveAttribute(formData: FormData) {
+  const supabase = supabaseServer();
+  const { data } = await supabase.auth.getUser();
+
+  if (!data.user) return;
+
+  const currentUser = await prisma.user.findUnique({
+    where: { id: data.user.id }
+  });
+  if (!currentUser || currentUser.role !== "ADMIN") return;
+
+  const id = formData.get("id") as string;
+  const type = formData.get("type") as string;
+  const direction = formData.get("direction") as string; // 'up' | 'down'
+
+  if (!id || !type || !direction) return;
+
+  try {
+    const table = type === "category" ? prisma.category : prisma.brand;
+    const current = await (table as any).findUnique({ where: { id } });
+
+    if (!current) return;
+
+    if (direction === "up") {
+      await (table as any).update({
+        where: { id },
+        data: { sortOrder: current.sortOrder - 1 }
+      });
+    } else {
+      await (table as any).update({
+        where: { id },
+        data: { sortOrder: current.sortOrder + 1 }
+      });
+    }
+
+    revalidatePath("/admin/attributes");
+    revalidatePath("/admin/products/new");
+    revalidatePath("/sklep");
+  } catch (error) {
+    console.error("Move action error:", error);
+  }
+}

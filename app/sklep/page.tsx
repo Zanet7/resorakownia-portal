@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Search, SlidersHorizontal, ShoppingCart } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import SortSelect from "@/components/SortSelect";
+import StoreFilters from "@/components/StoreFilters";
 import { supabaseServer } from "@/lib/supabase/server";
 
 export default async function SklepPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
@@ -31,7 +32,9 @@ export default async function SklepPage({ searchParams }: { searchParams: Promis
   if (q) {
     where.OR = [
       { name: { contains: q, mode: 'insensitive' } },
-      { scale: { contains: q, mode: 'insensitive' } }
+      { scale: { contains: q, mode: 'insensitive' } },
+      { brand: { name: { contains: q, mode: 'insensitive' } } },
+      { category: { name: { contains: q, mode: 'insensitive' } } }
     ];
   }
   if (categoryList.length > 0) {
@@ -62,8 +65,8 @@ export default async function SklepPage({ searchParams }: { searchParams: Promis
     include: { brand: true, category: true }
   });
 
-  const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
-  const brands = await prisma.brand.findMany({ orderBy: { name: 'asc' } });
+  const categories = await prisma.category.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] });
+  const brands = await prisma.brand.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] });
 
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
@@ -119,79 +122,16 @@ export default async function SklepPage({ searchParams }: { searchParams: Promis
         </div>
       </div>
 
-      <form key={JSON.stringify(resolvedParams) + "filters"} action="/sklep" method="GET" className="max-w-7xl mx-auto px-6 lg:px-8 py-12 w-full flex-1 flex flex-col md:flex-row gap-8">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12 w-full flex-1 flex flex-col md:flex-row gap-8">
         
-        {/* Hidden field to keep Q when applying sidebar filters */}
-        {q && <input type="hidden" name="q" value={q} />}
+
 
         {/* Sidebar Filters */}
-        <div className="w-full md:w-64 shrink-0">
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 sticky top-24 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <SlidersHorizontal className="w-5 h-5" /> Filtry
-              </h2>
-              {hasFilters && (
-                <Link href="/sklep" className="text-sm font-semibold text-orange-600 hover:text-orange-700 transition-colors">
-                  Wyczyść
-                </Link>
-              )}
-            </div>
-            
-            {/* Filter Categories and Brands */}
-            <div className="space-y-6">
-              
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Kategorie</h3>
-                <div className="space-y-2">
-                  {categories.map((cat) => (
-                    <label key={cat.id} className="flex items-center gap-3 cursor-pointer group">
-                      <input type="checkbox" name="categoryId" value={cat.id} defaultChecked={categoryList.includes(cat.id)} className="w-5 h-5 border-gray-300 rounded text-orange-500 focus:ring-orange-500 cursor-pointer" />
-                      <span className="text-gray-600 group-hover:text-gray-900 transition-colors">{cat.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-gray-100">
-                <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Marka</h3>
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-                  {brands.map((b) => (
-                    <label key={b.id} className="flex items-center gap-3 cursor-pointer group">
-                      <input type="checkbox" name="brandId" value={b.id} defaultChecked={brandList.includes(b.id)} className="w-5 h-5 border-gray-300 rounded text-orange-500 focus:ring-orange-500 cursor-pointer" />
-                      <span className="text-gray-600 group-hover:text-gray-900 transition-colors text-sm">{b.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-gray-100">
-                <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Skala</h3>
-                <div className="flex flex-wrap gap-2">
-                  {['1:64', '1:43', '1:18'].map((scale) => (
-                    <label key={scale} className={`px-3 py-1.5 border rounded-lg text-sm transition-all cursor-pointer ${scaleList.includes(scale) ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600 hover:border-black hover:text-black'}`}>
-                      <input type="checkbox" name="scale" value={scale} defaultChecked={scaleList.includes(scale)} className="sr-only" />
-                      {scale}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-gray-100">
-                <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Cena (zł)</h3>
-                <div className="flex items-center gap-2">
-                  <input type="number" name="min" defaultValue={min} placeholder="Od" className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm outline-none focus:border-gray-400" />
-                  <span className="text-gray-400">-</span>
-                  <input type="number" name="max" defaultValue={max} placeholder="Do" className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm outline-none focus:border-gray-400" />
-                </div>
-              </div>
-
-              <button type="submit" className="w-full mt-4 bg-orange-500 text-white font-bold py-3.5 rounded-xl hover:bg-orange-600 transition-colors shadow-md">
-                Zastosuj filtry
-              </button>
-            </div>
-          </div>
-        </div>
+        <StoreFilters 
+          categories={categories} 
+          brands={brands} 
+          hasFilters={hasFilters} 
+        />
 
         {/* Product Grid */}
         <div className="flex-1">
@@ -219,7 +159,7 @@ export default async function SklepPage({ searchParams }: { searchParams: Promis
             </div>
           )}
         </div>
-      </form>
+      </div>
     </div>
   );
 }
