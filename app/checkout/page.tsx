@@ -1,7 +1,7 @@
 "use client";
 
 import { useCart } from "@/components/CartContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, CreditCard, Smartphone, CheckCircle, PackageSearch } from "lucide-react";
 import Link from "next/link";
 import { checkoutCart } from "@/app/sklep/actions";
@@ -15,11 +15,18 @@ export default function CheckoutPage() {
   const [deliveryMethod, setDeliveryMethod] = useState("kurier");
   const router = useRouter();
 
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchCart();
+  }, []);
+
   const deliveryCost = deliveryMethod === "paczkomat" ? 12.99 : deliveryMethod === "kurier" ? 15.00 : 0.00;
   const deliveryName = deliveryMethod === "paczkomat" ? "Paczkomat InPost" : deliveryMethod === "kurier" ? "Kurier DPD" : "Odbiór osobisty";
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCheckoutError(null);
     setIsProcessing(true);
     
     // Symulacja ładowania i płatności
@@ -30,7 +37,7 @@ export default function CheckoutPage() {
       await fetchCart();
       setSuccess(true);
     } else {
-      alert("Wystąpił błąd podczas finalizacji zamówienia.");
+      setCheckoutError(result.error || "Wystąpił błąd podczas finalizacji zamówienia.");
     }
     
     setIsProcessing(false);
@@ -203,6 +210,12 @@ export default function CheckoutPage() {
                 <span className="text-lg font-bold text-gray-900">Do zapłaty</span>
                 <span className="text-3xl font-black text-gray-900">{(cartTotal + deliveryCost).toFixed(2)} zł</span>
               </div>
+
+              {checkoutError && (
+                <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm font-medium">
+                  {checkoutError}
+                </div>
+              )}
               
               {/* Przycisk mobiny */}
               <button 

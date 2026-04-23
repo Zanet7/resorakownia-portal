@@ -40,6 +40,7 @@ model Product {
   description   String?
   imageUrl      String?
   price         Decimal       @db.Decimal(10,2)
+  stock         Int           @default(0)     // ← DODANE: Stan magazynowy
   createdAt     DateTime      @default(now())
 
   categoryId    String?

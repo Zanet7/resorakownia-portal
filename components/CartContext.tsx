@@ -21,6 +21,8 @@ interface CartContextType {
   isLoading: boolean;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
+  cartError: string | null;
+  setCartError: (error: string | null) => void;
   fetchCart: () => Promise<void>;
   addItem: (productId: string) => Promise<void>;
   decreaseItem: (itemId: string) => Promise<void>;
@@ -36,6 +38,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItemType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [cartError, setCartError] = useState<string | null>(null);
   const router = useRouter();
 
   const fetchCart = async () => {
@@ -63,6 +66,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       router.push("/login");
       return;
     }
+    if (error === "brak_w_magazynie") {
+      setCartError("Niestety, brak wystarczającej ilości tego produktu w magazynie.");
+      setIsCartOpen(true);
+      setTimeout(() => setCartError(null), 4000);
+      return;
+    }
     // Optimistic UI might be handy here, but for simplicity we refetch
     await fetchCart();
     setIsCartOpen(true); // Open drawer on add
@@ -88,6 +97,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         isCartOpen,
         setIsCartOpen,
+        cartError,
+        setCartError,
         fetchCart,
         addItem,
         decreaseItem,

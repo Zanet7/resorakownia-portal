@@ -18,7 +18,22 @@ export async function getCart() {
     orderBy: { addedAt: "desc" }
   });
 
-  const formattedItems = items.map(item => ({
+  // Korygujemy ilości w koszyku, jeśli stan magazynowy uległ zmniejszeniu
+  for (const item of items) {
+    if (item.quantity > item.product.stock) {
+      if (item.product.stock <= 0) {
+        await prisma.cartItem.delete({ where: { id: item.id } });
+        item.quantity = 0;
+      } else {
+        await prisma.cartItem.update({ where: { id: item.id }, data: { quantity: item.product.stock } });
+        item.quantity = item.product.stock;
+      }
+    }
+  }
+
+  const validItems = items.filter(item => item.quantity > 0);
+
+  const formattedItems = validItems.map(item => ({
     ...item,
     product: {
       ...item.product,
@@ -37,9 +52,17 @@ export async function addToCart(productId: string) {
     return { error: "unauthorized" };
   }
 
+  const product = await prisma.product.findUnique({ where: { id: productId } });
+  if (!product) return { error: "not_found" };
+
   const existing = await prisma.cartItem.findFirst({
     where: { userId: user.id, productId }
   });
+
+  const currentQuantity = existing ? existing.quantity : 0;
+  if (currentQuantity + 1 > product.stock) {
+    return { error: "brak_w_magazynie" };
+  }
 
   if (existing) {
     await prisma.cartItem.update({
@@ -113,6 +136,13 @@ export async function checkoutCart() {
     return acc + (Number(item.product.price) * item.quantity);
   }, 0);
 
+  // Sprawdzanie stanu magazynowego
+  for (const item of cartItems) {
+    if (item.quantity > item.product.stock) {
+      return { error: `Niewystarczająca ilość w magazynie dla: ${item.product.name}` };
+    }
+  }
+
   try {
     await prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
@@ -123,16 +153,21 @@ export async function checkoutCart() {
         }
       });
 
-      await Promise.all(cartItems.map(item => 
-        tx.orderItem.create({
+      await Promise.all(cartItems.map(async (item) => {
+        await tx.orderItem.create({
           data: {
             orderId: order.id,
             productId: item.productId,
             quantity: item.quantity,
             price: item.product.price
           }
-        })
-      ));
+        });
+
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stock: { decrement: item.quantity } }
+        });
+      }));
 
       await tx.cartItem.deleteMany({
         where: { userId: user.id }

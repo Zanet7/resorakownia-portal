@@ -148,25 +148,47 @@ export default function ProductForm({ initialData, categories = [], brands = [],
           <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-6 border-b border-gray-100 pb-4">Wycena i multimedia</h3>
             
-            <div className="grid grid-cols-1 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Cena brutto (PLN) <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <DollarSign className="h-5 w-5 text-gray-400" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Cena brutto (PLN) <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <DollarSign className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      name="price"
+                      required
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      defaultValue={initialData ? Number(initialData.price).toFixed(2) : ""}
+                      placeholder="0.00"
+                      className="w-full border border-gray-300 rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all font-medium"
+                    />
                   </div>
-                  <input
-                    name="price"
-                    required
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    defaultValue={initialData ? Number(initialData.price).toFixed(2) : ""}
-                    placeholder="0.00"
-                    className="w-full sm:w-1/2 border border-gray-300 rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all font-medium"
-                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Ilość w magazynie (szt.) <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <PackagePlus className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      name="stock"
+                      required
+                      type="number"
+                      step="1"
+                      min="0"
+                      defaultValue={initialData?.stock ?? 0}
+                      placeholder="0"
+                      className="w-full border border-gray-300 rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all font-medium"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -187,7 +209,6 @@ export default function ProductForm({ initialData, categories = [], brands = [],
                   />
                 </div>
               </div>
-            </div>
           </div>
 
           <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8">

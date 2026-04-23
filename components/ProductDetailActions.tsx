@@ -6,13 +6,16 @@ import { useCart } from "./CartContext";
 import { toggleFavorite } from "@/app/sklep/actions";
 import { useRouter } from "next/navigation";
 
-export default function ProductDetailActions({ productId, isFavInitial }: { productId: string, isFavInitial: boolean }) {
+export default function ProductDetailActions({ productId, isFavInitial, stock }: { productId: string, isFavInitial: boolean, stock: number }) {
   const { addItem } = useCart();
   const [isAdding, setIsAdding] = useState(false);
   const [isFav, setIsFav] = useState(isFavInitial);
   const router = useRouter();
 
+  const isOutOfStock = stock <= 0;
+
   const handleAddToCart = async () => {
+    if (isOutOfStock) return;
     setIsAdding(true);
     await addItem(productId);
     setIsAdding(false);
@@ -31,11 +34,15 @@ export default function ProductDetailActions({ productId, isFavInitial }: { prod
     <div className="flex flex-col sm:flex-row gap-4 mt-8">
       <button 
         onClick={handleAddToCart}
-        disabled={isAdding}
-        className="flex-1 bg-black text-white px-8 py-4 rounded-2xl text-lg font-bold flex items-center justify-center gap-3 hover:bg-orange-500 hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-orange-500/10 disabled:opacity-70"
+        disabled={isAdding || isOutOfStock}
+        className={`flex-1 px-8 py-4 rounded-2xl text-lg font-bold flex items-center justify-center gap-3 transition-all duration-300 shadow-xl ${
+          isOutOfStock 
+            ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
+            : 'bg-black text-white hover:bg-orange-500 hover:-translate-y-1 shadow-orange-500/10 disabled:opacity-70'
+        }`}
       >
-        <ShoppingCart className={`w-6 h-6 ${isAdding ? 'animate-bounce' : ''}`} />
-        {isAdding ? "Dodawanie..." : "Do koszyka"}
+        <ShoppingCart className={`w-6 h-6 ${isAdding && !isOutOfStock ? 'animate-bounce' : ''}`} />
+        {isOutOfStock ? "Brak w magazynie" : (isAdding ? "Dodawanie..." : "Do koszyka")}
       </button>
 
       <button 

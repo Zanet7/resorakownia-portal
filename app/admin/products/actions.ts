@@ -25,6 +25,7 @@ export async function createProduct(formData: FormData) {
   const categoryId = formData.get("categoryId") as string;
   const scale = formData.get("scale") as string;
   const priceString = formData.get("price") as string;
+  const stockString = formData.get("stock") as string;
   const description = formData.get("description") as string;
   let imageUrl = formData.get("imageUrl") as string;
 
@@ -42,6 +43,11 @@ export async function createProduct(formData: FormData) {
     return { error: "Cena musi być poprawną liczbą." };
   }
 
+  const stock = parseInt(stockString || "0", 10);
+  if (isNaN(stock) || stock < 0) {
+    return { error: "Ilość w magazynie musi być prawidłową, nieujemną liczbą." };
+  }
+
   await prisma.product.create({
     data: {
       name,
@@ -49,6 +55,7 @@ export async function createProduct(formData: FormData) {
       categoryId: categoryId ? categoryId : null,
       scale,
       price,
+      stock,
       description,
       imageUrl,
       ownerId: data.user.id,
@@ -81,6 +88,7 @@ export async function updateProduct(formData: FormData) {
   const categoryId = formData.get("categoryId") as string;
   const scale = formData.get("scale") as string;
   const priceString = formData.get("price") as string;
+  const stockString = formData.get("stock") as string;
   const description = formData.get("description") as string;
   let imageUrl = formData.get("imageUrl") as string;
 
@@ -101,6 +109,11 @@ export async function updateProduct(formData: FormData) {
     return { error: "Cena musi być poprawną liczbą." };
   }
 
+  const stock = parseInt(stockString || "0", 10);
+  if (isNaN(stock) || stock < 0) {
+    return { error: "Ilość w magazynie musi być prawidłową, nieujemną liczbą." };
+  }
+
   await prisma.product.update({
     where: { id },
     data: {
@@ -109,9 +122,44 @@ export async function updateProduct(formData: FormData) {
       categoryId: categoryId ? categoryId : null,
       scale,
       price,
+      stock,
       description,
       imageUrl,
     },
+  });
+
+  redirect("/admin/products");
+}
+
+export async function deleteProduct(formData: FormData) {
+  const supabase = supabaseServer();
+  const { data } = await supabase.auth.getUser();
+
+  if (!data.user) {
+    throw new Error("Brak dostępu: niezalogowany.");
+  }
+
+  const currentUser = await prisma.user.findUnique({
+    where: { id: data.user.id },
+  });
+
+  if (!currentUser || currentUser.role !== "ADMIN") {
+    throw new Error("Brak dostępu: brak roli administratora.");
+  }
+
+  const id = formData.get("id") as string;
+  
+  if (!id) {
+    return { error: "Brak ID produktu do usunięcia." };
+  }
+
+  // Usunięcie powiązanych danych, m.in. z koszyka lub ulubionych, zanim usuniemy produkt
+  await prisma.cartItem.deleteMany({ where: { productId: id } });
+  await prisma.collectionItem.deleteMany({ where: { productId: id } });
+  await prisma.orderItem.deleteMany({ where: { productId: id } });
+
+  await prisma.product.delete({
+    where: { id },
   });
 
   redirect("/admin/products");

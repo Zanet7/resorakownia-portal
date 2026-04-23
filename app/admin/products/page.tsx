@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { supabaseServer } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Plus, Package, ArrowLeft, Image as ImageIcon } from "lucide-react";
+import { deleteProduct } from "./actions";
 
 export default async function ProductsPage() {
   const supabase = supabaseServer();
@@ -144,11 +145,16 @@ export default async function ProductsPage() {
                         {new Date(p.createdAt).toLocaleDateString("pl-PL")}
                       </td>
                       <td className="py-4 px-6 text-right">
-                        {/* Placeholder for actions like edit/delete */}
-                        <div className="inline-flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="inline-flex items-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Link href={`/admin/products/${p.id}/edit`} className="text-sm font-medium text-blue-600 hover:text-blue-800">
                             Edytuj
                           </Link>
+                          <form action={deleteProduct}>
+                            <input type="hidden" name="id" value={p.id} />
+                            <button type="submit" className="text-sm font-medium text-red-600 hover:text-red-800">
+                              Usuń
+                            </button>
+                          </form>
                         </div>
                       </td>
                     </tr>

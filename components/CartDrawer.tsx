@@ -1,16 +1,17 @@
 "use client";
 
-import { X, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { X, Minus, Plus, Trash2, ShoppingBag, AlertCircle } from "lucide-react";
 import { useCart } from "./CartContext";
 import Link from "next/link";
 import { useEffect } from "react";
 
 export default function CartDrawer() {
-  const { isCartOpen, setIsCartOpen, items, isLoading, addItem, decreaseItem, removeItem, cartTotal } = useCart();
+  const { isCartOpen, setIsCartOpen, items, isLoading, addItem, decreaseItem, removeItem, cartTotal, cartError, fetchCart } = useCart();
 
   useEffect(() => {
     if (isCartOpen) {
       document.body.style.overflow = "hidden";
+      fetchCart();
     } else {
       document.body.style.overflow = "unset";
     }
@@ -48,6 +49,14 @@ export default function CartDrawer() {
                   <X className="h-6 w-6" aria-hidden="true" />
                 </button>
               </div>
+
+              {/* Error Banner */}
+              {cartError && (
+                <div className="bg-red-50 border-b border-red-100 p-4 text-red-600 flex items-start gap-3 animate-in slide-in-from-top-2">
+                  <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                  <p className="text-sm font-medium">{cartError}</p>
+                </div>
+              )}
 
               {/* Items List */}
               <div className="flex-1 overflow-y-auto px-6 py-4">

@@ -121,7 +121,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
             {/* Akcje - Client Component (Koszyk, Ulubione) */}
             <div className="mt-auto">
-               <ProductDetailActions productId={product.id} isFavInitial={isFav} />
+               <ProductDetailActions productId={product.id} isFavInitial={isFav} stock={product.stock} />
             </div>
 
             {/* Guarantees */}
