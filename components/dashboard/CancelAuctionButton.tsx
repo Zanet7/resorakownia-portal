@@ -12,10 +12,7 @@ export default function CancelAuctionButton({ auctionId }: { auctionId: string }
     
     setIsDeleting(true);
     try {
-      const res = await cancelAuction(auctionId);
-      if (res && res.error) {
-        alert(res.error);
-      }
+      await cancelAuction(auctionId);
     } catch (e: any) {
       alert(e.message || "Błąd podczas usuwania.");
     } finally {
