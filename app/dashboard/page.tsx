@@ -46,18 +46,18 @@ export default async function DashboardPage() {
       <div className="max-w-6xl mx-auto w-full space-y-8">
         
         {/* Header */}
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 flex items-center justify-between">
-          <div className="flex items-center gap-6">
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
              <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center border-4 border-white shadow-sm shrink-0">
                <User className="w-8 h-8" />
              </div>
              <div>
-               <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Cześć, {username}!</h1>
-               <p className="text-gray-500 mt-1">Twój panel zarządzania kolekcją i aukcjami.</p>
+               <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Cześć, {username}!</h1>
+               <p className="text-sm sm:text-base text-gray-500 mt-1">Twój panel zarządzania kolekcją i aukcjami.</p>
              </div>
           </div>
-          <div className="hidden sm:block">
-            <Link href="/dashboard/aukcje/nowa" className="flex items-center gap-2 bg-red-600 text-white px-6 py-3 rounded-xl font-bold shadow-md hover:bg-red-700 transition-colors">
+          <div className="w-full sm:w-auto">
+            <Link href="/dashboard/aukcje/nowa" className="flex items-center justify-center w-full sm:w-auto gap-2 bg-red-600 text-white px-6 py-3 rounded-xl font-bold shadow-md hover:bg-red-700 transition-colors">
               <Gavel className="w-5 h-5" />
               Wystaw aukcję
             </Link>
@@ -93,7 +93,6 @@ export default async function DashboardPage() {
               <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                 <Gavel className="w-6 h-6 text-red-500" /> Moje wystawione aukcje
               </h2>
-              <Link href="/dashboard/aukcje/nowa" className="sm:hidden text-red-600 font-medium text-sm flex items-center gap-1">Dodaj <ArrowRight className="w-4 h-4"/></Link>
             </div>
             
             {myAuctions.length === 0 ? (

@@ -66,7 +66,7 @@ export default function BidForm({ auctionId, currentPrice, isEnded }: { auctionI
         </div>
       )}
 
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-500 font-medium">PLN</span>
           <input
@@ -83,7 +83,7 @@ export default function BidForm({ auctionId, currentPrice, isEnded }: { auctionI
         <button
           type="submit"
           disabled={isSubmitting}
-          className={`bg-red-600 text-white px-8 font-bold rounded-2xl hover:bg-red-700 transition-colors shadow-md flex items-center justify-center gap-2 ${isSubmitting ? 'opacity-70' : ''}`}
+          className={`w-full sm:w-auto bg-red-600 text-white px-8 py-4 font-bold rounded-2xl hover:bg-red-700 transition-colors shadow-md flex items-center justify-center gap-2 ${isSubmitting ? 'opacity-70' : ''}`}
         >
           <Gavel className="w-5 h-5" /> Licytuj
         </button>

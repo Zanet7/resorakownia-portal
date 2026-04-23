@@ -36,6 +36,7 @@ export default async function ProductsPage() {
   }
 
   const products = await prisma.product.findMany({
+    where: { auction: null },
     orderBy: { createdAt: "desc" },
     include: { brand: true }
   });

@@ -2,16 +2,47 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Car, Info, Gavel, FolderTree, Tags, DollarSign, ImageIcon, Clock } from "lucide-react";
+import { ArrowLeft, Car, Info, Gavel, FolderTree, Tags, DollarSign, ImageIcon, Clock, Upload } from "lucide-react";
+import { supabaseClient } from "@/lib/supabase/client";
 
 export default function AuctionForm({ categories = [], brands = [], actionFn }: { categories?: any[], brands?: any[], actionFn: (formData: FormData) => Promise<any> }) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
 
   async function handleAction(formData: FormData) {
     setError(null);
     setIsSubmitting(true);
+    
     try {
+      if (file) {
+        if (file.size > 2 * 1024 * 1024) {
+          setError("Zdjęcie nie może być większe niż 2 MB.");
+          setIsSubmitting(false);
+          return;
+        }
+        
+        const supabase = supabaseClient();
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+        
+        const { data, error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(fileName, file);
+          
+        if (uploadError) {
+          setError(`Błąd wczytywania zdjęcia: upewnij się, że bucket 'product-images' istnieje i jest poprawnie skonfigurowany. Treść błędu: ${uploadError.message}`);
+          setIsSubmitting(false);
+          return;
+        }
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(fileName);
+          
+        formData.set('imageUrl', publicUrl);
+      }
+
       const result = await actionFn(formData);
       if (result && result.error) {
         setError(result.error);
@@ -173,13 +204,16 @@ export default function AuctionForm({ categories = [], brands = [], actionFn }: 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Zdjęcie (URL)</label>
-                <input
-                  name="imageUrl"
-                  type="url"
-                  placeholder="https://..."
-                  className="w-full border border-gray-300 rounded-xl py-3 px-4 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Zdjęcie z dysku</label>
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setFile(e.target.files?.[0] || null)}
+                    className="w-full border border-gray-300 rounded-xl py-2 px-3 focus:ring-2 focus:ring-orange-500 outline-none transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
+                  />
+                  <input type="hidden" name="imageUrl" value="" />
+                </div>
               </div>
 
               <div className="md:col-span-2">
@@ -194,14 +228,14 @@ export default function AuctionForm({ categories = [], brands = [], actionFn }: 
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-4 pt-4">
-            <Link href="/dashboard" className="px-6 py-3 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+          <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-4 pt-4 mt-8">
+            <Link href="/dashboard" className="w-full sm:w-auto text-center px-6 py-3 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-colors">
               Anuluj
             </Link>
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`flex items-center gap-2 bg-black text-white font-medium px-8 py-3 rounded-xl hover:bg-gray-800 transition-colors shadow-md ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+              className={`w-full sm:w-auto flex items-center justify-center gap-2 bg-black text-white font-medium px-8 py-3 rounded-xl hover:bg-gray-800 transition-colors shadow-md ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
               <Gavel className="w-5 h-5" />
               {isSubmitting ? "Zapisywanie..." : "Rozpocznij Aukcję"}

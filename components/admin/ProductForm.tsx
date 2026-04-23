@@ -2,17 +2,51 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, PackagePlus, Info, DollarSign, Ruler, Car, Image as ImageIcon, Sparkles, Save, FolderTree, Tags } from "lucide-react";
+import { ArrowLeft, PackagePlus, Info, DollarSign, Ruler, Car, Image as ImageIcon, Sparkles, Save, FolderTree, Tags, Upload } from "lucide-react";
+import { supabaseClient } from "@/lib/supabase/client";
 
 export default function ProductForm({ initialData, categories = [], brands = [], actionFn, title, subtitle }: { initialData?: any, categories?: any[], brands?: any[], actionFn: (formData: FormData) => Promise<any>, title: string, subtitle: string }) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+
   async function handleAction(formData: FormData) {
     if (initialData) formData.append("id", initialData.id);
     
     setError(null);
     setIsSubmitting(true);
     try {
+      if (file) {
+        if (file.size > 2 * 1024 * 1024) {
+          setError("Zdjęcie nie może być większe niż 2 MB.");
+          setIsSubmitting(false);
+          return;
+        }
+        
+        const supabase = supabaseClient();
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+        
+        const { data, error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(fileName, file);
+          
+        if (uploadError) {
+          setError(`Błąd wczytywania zdjęcia: upewnij się, że bucket 'product-images' istnieje. Treść: ${uploadError.message}`);
+          setIsSubmitting(false);
+          return;
+        }
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(fileName);
+          
+        formData.set('imageUrl', publicUrl);
+      } else if (!formData.get('imageUrl') && initialData?.imageUrl) {
+        // Zabezpieczenie aby formularz nie nadpisywał pustym imagem jeśli użytkownik nie wybrał nowego pliku, a produkt już ma plik
+        formData.set('imageUrl', initialData.imageUrl);
+      }
+
       const result = await actionFn(formData);
       if (result && result.error) {
         setError(result.error);
@@ -194,19 +228,23 @@ export default function ProductForm({ initialData, categories = [], brands = [],
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Link do zdjęcia <span className="text-gray-400 font-normal ml-1">(Adres URL)</span>
+                  Zdjęcie z dysku <span className="text-gray-400 font-normal ml-1">(zastąpi obecne)</span>
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <ImageIcon className="h-5 w-5 text-gray-400" />
-                  </div>
                   <input
-                    name="imageUrl"
-                    type="url"
-                    defaultValue={initialData?.imageUrl || ""}
-                    placeholder="https://... (pozostaw puste dla generowanego obrazu)"
-                    className="w-full border border-gray-300 rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setFile(e.target.files?.[0] || null)}
+                    className="w-full border border-gray-300 rounded-xl py-2 px-3 focus:ring-2 focus:ring-black outline-none transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
                   />
+                  <input type="hidden" name="imageUrl" value="" />
+                  
+                  {initialData?.imageUrl && !file && (
+                    <div className="mt-4 flex items-center gap-4 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                       <img src={initialData.imageUrl} alt="Obecne zdjęcie" className="w-16 h-16 object-cover rounded-lg border border-gray-200" />
+                       <span className="text-sm font-medium text-gray-600">Obecne zdjęcie zapisane w bazie</span>
+                    </div>
+                  )}
                 </div>
               </div>
           </div>
