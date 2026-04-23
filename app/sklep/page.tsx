@@ -59,8 +59,9 @@ export default async function SklepPage({ searchParams }: { searchParams: Promis
 
   const hasFilters = q !== '' || categoryList.length > 0 || brandList.length > 0 || scaleList.length > 0 || min !== undefined || max !== undefined || sort !== 'newest';
 
-  // Ukrywamy produkty niedostępne w magazynie
+  // Ukrywamy produkty niedostępne w magazynie oraz produkty będące na aukcji
   where.stock = { gt: 0 };
+  where.auction = null;
 
   const products = await prisma.product.findMany({
     where,
