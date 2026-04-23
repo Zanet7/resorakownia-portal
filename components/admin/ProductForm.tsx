@@ -135,7 +135,7 @@ export default function ProductForm({ initialData, categories = [], brands = [],
                     defaultValue={initialData?.brandId || ""}
                     className="w-full border border-gray-300 rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all appearance-none cursor-pointer bg-white"
                   >
-                    <option value="">-- Wybierz lub zostaw puste --</option>
+                    <option value="">-- Wybierz --</option>
                     {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
                 </div>
@@ -154,7 +154,7 @@ export default function ProductForm({ initialData, categories = [], brands = [],
                     defaultValue={initialData?.categoryId || ""}
                     className="w-full border border-gray-300 rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all appearance-none cursor-pointer bg-white"
                   >
-                    <option value="">-- Wybierz lub zostaw puste --</option>
+                    <option value="">-- Wybierz --</option>
                     {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>

@@ -28,7 +28,7 @@ export async function createAuction(formData: FormData) {
   const scale = formData.get("scale") as string;
   const description = formData.get("description") as string;
   const imageUrl = formData.get("imageUrl") as string;
-  
+
   const startingPrice = parseFloat(formData.get("startingPrice") as string);
   const durationDays = parseInt(formData.get("durationDays") as string, 10);
 
@@ -156,4 +156,44 @@ export async function checkAndCloseAuction(auctionId: string) {
   }
 
   return auction;
+}
+
+export async function cancelAuction(auctionId: string) {
+  const supabase = supabaseServer();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("unauthorized");
+  }
+
+  const auction = await prisma.auction.findUnique({
+    where: { id: auctionId }
+  });
+
+  if (!auction) {
+    throw new Error("Aukcja nie istnieje.");
+  }
+
+  if (auction.ownerId !== user.id) {
+    // Sprawdzamy czy to admin
+    const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+    if (dbUser?.role !== "ADMIN") {
+      throw new Error("Nie masz uprawnień do usunięcia tej aukcji.");
+    }
+  }
+
+  if (auction.status !== "ACTIVE") {
+    throw new Error("Tylko aktywne aukcje mogą zostać anulowane.");
+  }
+
+  await prisma.auction.update({
+    where: { id: auctionId },
+    data: { status: "CANCELLED" }
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/aukcje");
+  revalidatePath(`/aukcje/${auctionId}`);
+  
+  return { success: true };
 }
