@@ -7,7 +7,17 @@ import { ArrowLeft, PackagePlus, Info, DollarSign, Ruler, Car, Image as ImageIco
 export default function ProductForm({ initialData, categories = [], brands = [], actionFn, title, subtitle }: { initialData?: any, categories?: any[], brands?: any[], actionFn: (formData: FormData) => Promise<any>, title: string, subtitle: string }) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  async function handleAction(formData: FormData) {
+    if (initialData) formData.append("id", initialData.id);
+    
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      const result = await actionFn(formData);
+      if (result && result.error) {
+        setError(result.error);
+        setIsSubmitting(false);
+      }
     } catch (e: any) {
       setError(e.message || "Wystąpił nieoczekiwany błąd");
       setIsSubmitting(false);
