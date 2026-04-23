@@ -12,6 +12,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   const product = await prisma.product.findUnique({
     where: { id },
+    include: { brand: true }
   });
 
   if (!product) {
@@ -69,7 +70,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           <div className="w-full lg:w-1/2 p-6 md:p-8 lg:p-16 flex flex-col">
             <div className="mb-6">
               <span className="inline-block py-1.5 px-3 rounded-md bg-orange-50 text-orange-600 text-xs font-bold tracking-widest uppercase mb-4">
-                {product.brand || "Marka nieznana"}
+                {product.brand?.name || "Marka nieznana"}
               </span>
               <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-4">
                 {product.name}
@@ -87,7 +88,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Marka</p>
-                  <p className="font-bold text-gray-900">{product.brand || "-"}</p>
+                  <p className="font-bold text-gray-900">{product.brand?.name || "-"}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100">

@@ -6,7 +6,8 @@ export default async function Home() {
   // Pobieramy 3 najnowsze produkty ze sklepu na stronę główną
   const latestProducts = await prisma.product.findMany({
     take: 3,
-    orderBy: { createdAt: "desc" }
+    orderBy: { createdAt: "desc" },
+    include: { brand: true }
   });
 
   return (
@@ -24,12 +25,12 @@ export default async function Home() {
               <Star className="w-4 h-4 fill-orange-500" />
               <span>Największy rynek modeli kolekcjonerskich w Polsce</span>
             </div>
-            
+
             <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
-              Małe auta.<br/>
+              Małe auta.<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-600">Wielka pasja.</span>
             </h1>
-            
+
             <p className="mt-6 text-xl text-gray-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
               Odkryj limitowane edycje, uzupełnij swoją gablotę lub sprzedaj unikatowe perełki. Dołącz do społeczności Resorakowni.
             </p>
@@ -49,7 +50,7 @@ export default async function Home() {
                 Dołącz do forum
               </Link>
             </div>
-            
+
             <div className="mt-10 flex items-center justify-center lg:justify-start gap-4">
               <div className="flex -space-x-4">
                 <img className="w-10 h-10 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="" />
@@ -70,9 +71,9 @@ export default async function Home() {
                 className="w-full h-full object-cover rounded-2xl"
               />
             </div>
-            
+
             {/* Floating badge */}
-            <div className="absolute -bottom-6 -left-6 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 flex items-center gap-4 animate-bounce" style={{animationDuration: '3s'}}>
+            <div className="absolute -bottom-6 -left-6 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 flex items-center gap-4 animate-bounce" style={{ animationDuration: '3s' }}>
               <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600">
                 <Car className="w-6 h-6" />
               </div>
@@ -94,33 +95,33 @@ export default async function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { 
-              title: "Sklep", 
-              desc: "Oficjalna oferta rarytasów.", 
-              link: "/sklep", 
+            {
+              title: "Sklep",
+              desc: "Oficjalna oferta rarytasów.",
+              link: "/sklep",
               icon: ShoppingCart,
-              color: "bg-blue-50 text-blue-600 border-blue-100" 
+              color: "bg-blue-50 text-blue-600 border-blue-100"
             },
-            { 
-              title: "Aukcje", 
-              desc: "Licytuj od złotówki i wygrywaj perełki.", 
-              link: "/aukcje", 
+            {
+              title: "Aukcje",
+              desc: "Licytuj od złotówki i wygrywaj perełki.",
+              link: "/aukcje",
               icon: Gavel,
-              color: "bg-orange-50 text-orange-600 border-orange-100" 
+              color: "bg-orange-50 text-orange-600 border-orange-100"
             },
-            { 
-              title: "Twoja Kolekcja", 
-              desc: "Zarządzaj cyfrową wizytówką garażu.", 
-              link: "/kolekcjonerstwo", 
+            {
+              title: "Twoja Kolekcja",
+              desc: "Zarządzaj cyfrową wizytówką garażu.",
+              link: "/kolekcjonerstwo",
               icon: PackageSearch,
-              color: "bg-green-50 text-green-600 border-green-100" 
+              color: "bg-green-50 text-green-600 border-green-100"
             },
-            { 
-              title: "Społeczność", 
-              desc: "Chwal się zdobyczami na forum.", 
-              link: "/spolecznosc", 
+            {
+              title: "Społeczność",
+              desc: "Chwal się zdobyczami na forum.",
+              link: "/spolecznosc",
               icon: Users,
-              color: "bg-purple-50 text-purple-600 border-purple-100" 
+              color: "bg-purple-50 text-purple-600 border-purple-100"
             },
           ].map((m) => {
             const Icon = m.icon;
@@ -162,17 +163,17 @@ export default async function Home() {
               latestProducts.map((p) => (
                 <div key={p.id} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-gray-100 flex flex-col group">
                   <div className="relative aspect-square p-6 bg-gray-50 flex items-center justify-center overflow-hidden">
-                    <img 
-                      src={p.imageUrl || "https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&q=80&w=800"} 
+                    <img
+                      src={p.imageUrl || "https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&q=80&w=800"}
                       alt={p.name}
-                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" 
+                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-4 left-4 bg-white/90 backdrop-blur text-black text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm">
                       {p.scale ? `SKALA ${p.scale}` : 'NOWOŚĆ'}
                     </div>
                   </div>
                   <div className="p-6 flex flex-col flex-1 border-t border-gray-50">
-                    <p className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-1">{p.brand || 'Brak marki'}</p>
+                    <p className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-1">{p.brand?.name || 'Brak marki'}</p>
                     <h3 className="text-xl font-bold text-gray-900 leading-tight mb-4 flex-1">{p.name}</h3>
                     <div className="flex items-center justify-between mt-auto">
                       <span className="text-2xl font-black text-gray-900">{Number(p.price).toFixed(2)} zł</span>
@@ -184,16 +185,16 @@ export default async function Home() {
                 </div>
               ))
             ) : (
-                <div className="col-span-3 py-10 text-center">
-                    <p className="text-gray-500">Sklep jest obecnie pusty.</p>
-                </div>
+              <div className="col-span-3 py-10 text-center">
+                <p className="text-gray-500">Sklep jest obecnie pusty.</p>
+              </div>
             )}
           </div>
-          
+
           <div className="mt-8 text-center sm:hidden">
-             <Link href="/sklep" className="inline-flex items-center justify-center bg-white border border-gray-300 px-6 py-3 rounded-xl font-medium w-full text-black">
-                Pokaż wszystkie
-             </Link>
+            <Link href="/sklep" className="inline-flex items-center justify-center bg-white border border-gray-300 px-6 py-3 rounded-xl font-medium w-full text-black">
+              Pokaż wszystkie
+            </Link>
           </div>
         </div>
       </section>
@@ -212,7 +213,7 @@ export default async function Home() {
           <div className="rounded-2xl bg-gray-200 overflow-hidden md:col-span-2 md:row-span-2 relative group cursor-pointer">
             <img src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&q=80&w=1200" alt="Supercar model - Ferrari" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
-                <span className="text-white font-bold text-xl">Użytkownik @Marek99 pokazał Ferrari</span>
+              <span className="text-white font-bold text-xl">Użytkownik @Marek99 pokazał Ferrari</span>
             </div>
           </div>
           <div className="rounded-2xl bg-gray-200 overflow-hidden relative group cursor-pointer">
@@ -224,7 +225,7 @@ export default async function Home() {
           <div className="rounded-2xl bg-gray-200 overflow-hidden md:col-span-2 relative group cursor-pointer">
             <img src="https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&q=80&w=800" alt="Skyline" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <Link href="/spolecznosc" className="bg-white text-black px-6 py-2 rounded-full font-bold">Zobacz forum</Link>
+              <Link href="/spolecznosc" className="bg-white text-black px-6 py-2 rounded-full font-bold">Zobacz forum</Link>
             </div>
           </div>
         </div>
@@ -245,13 +246,13 @@ export default async function Home() {
           <Link href="/">
             <img src="/logo.png" alt="Resorakownia logo" className="h-12 md:h-16 w-auto opacity-70 hover:opacity-100 transition-opacity" />
           </Link>
-          
+
           <div className="flex gap-8 text-sm font-medium text-gray-500">
             <Link href="/sklep" className="hover:text-black">Sklep</Link>
             <Link href="/aukcje" className="hover:text-black">Aukcje</Link>
             <Link href="/regulamin" className="hover:text-black">Regulamin</Link>
           </div>
-          
+
           <p className="text-gray-400 text-sm">© {(new Date()).getFullYear()} Resorakownia. Stworzone dla pasjonatów.</p>
         </div>
       </footer>
