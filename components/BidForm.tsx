@@ -28,7 +28,7 @@ export default function BidForm({ auctionId, currentPrice, isEnded }: { auctionI
     const result = await placeBid(auctionId, bidValue);
     setIsSubmitting(false);
 
-    if (result.error) {
+    if ('error' in result && result.error) {
       if (result.error === "unauthorized") {
         router.push("/login");
       } else {
