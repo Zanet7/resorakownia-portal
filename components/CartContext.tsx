@@ -25,6 +25,7 @@ interface CartContextType {
   addItem: (productId: string) => Promise<void>;
   decreaseItem: (itemId: string) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
+  clearCart: () => void;
   cartCount: number;
   cartTotal: number;
 }
@@ -40,10 +41,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const fetchCart = async () => {
     setIsLoading(true);
     const { items: fetchedItems, error } = await getCart();
-    if (!error && fetchedItems) {
+    if (error || !fetchedItems) {
+      setItems([]);
+    } else {
       setItems(fetchedItems as any);
     }
     setIsLoading(false);
+  };
+
+  const clearCart = () => {
+    setItems([]);
   };
 
   useEffect(() => {
@@ -85,6 +92,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         addItem,
         decreaseItem,
         removeItem,
+        clearCart,
         cartCount,
         cartTotal
       }}

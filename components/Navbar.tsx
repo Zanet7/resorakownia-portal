@@ -11,12 +11,13 @@ export default function Navbar({ username, isAdmin }: { username?: string | null
   const [isOpen, setIsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const router = useRouter();
-  const { cartCount, setIsCartOpen } = useCart();
+  const { cartCount, setIsCartOpen, clearCart } = useCart();
 
   const handleLogout = async () => {
     const supabase = supabaseClient();
     await supabase.auth.signOut();
     setIsUserMenuOpen(false);
+    clearCart();
     router.push("/login");
     router.refresh();
   };
