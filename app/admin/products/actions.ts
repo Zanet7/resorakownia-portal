@@ -150,7 +150,7 @@ export async function deleteProduct(formData: FormData) {
   const id = formData.get("id") as string;
   
   if (!id) {
-    return { error: "Brak ID produktu do usunięcia." };
+    throw new Error("Brak ID produktu do usunięcia.");
   }
 
   // Usunięcie powiązanych danych, m.in. z koszyka lub ulubionych, zanim usuniemy produkt
