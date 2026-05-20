@@ -3,8 +3,13 @@ import Link from "next/link";
 import { ArrowRight, ShoppingCart, Gavel, PackageSearch, Users, Star, Car } from "lucide-react";
 
 export default async function Home() {
-  // Pobieramy 3 najnowsze produkty ze sklepu na stronę główną
+  // Pobieramy 3 najnowsze produkty ze sklepu na stronę główną (tylko od administratora)
   const latestProducts = await prisma.product.findMany({
+    where: {
+      stock: { gt: 0 },
+      auction: null,
+      owner: { role: "ADMIN" }
+    },
     take: 3,
     orderBy: { createdAt: "desc" },
     include: { brand: true }
@@ -167,6 +172,7 @@ export default async function Home() {
                       src={p.imageUrl || "https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&q=80&w=800"}
                       alt={p.name}
                       className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
                     />
                     <div className="absolute top-4 left-4 bg-white/90 backdrop-blur text-black text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm">
                       {p.scale ? `SKALA ${p.scale}` : 'NOWOŚĆ'}
@@ -211,19 +217,19 @@ export default async function Home() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[200px]">
           <div className="rounded-2xl bg-gray-200 overflow-hidden md:col-span-2 md:row-span-2 relative group cursor-pointer">
-            <img src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&q=80&w=1200" alt="Supercar model - Ferrari" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <img src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&q=80&w=1200" alt="Supercar model - Ferrari" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
               <span className="text-white font-bold text-xl">Użytkownik @Marek99 pokazał Ferrari</span>
             </div>
           </div>
           <div className="rounded-2xl bg-gray-200 overflow-hidden relative group cursor-pointer">
-            <img src="https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=600" alt="Porsche" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <img src="https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=600" alt="Porsche" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
           </div>
           <div className="rounded-2xl bg-gray-200 overflow-hidden relative group cursor-pointer">
-            <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=600" alt="Dodge" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=600" alt="Dodge" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
           </div>
           <div className="rounded-2xl bg-gray-200 overflow-hidden md:col-span-2 relative group cursor-pointer">
-            <img src="https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&q=80&w=800" alt="Skyline" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <img src="https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&q=80&w=800" alt="Skyline" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <Link href="/spolecznosc" className="bg-white text-black px-6 py-2 rounded-full font-bold">Zobacz forum</Link>
             </div>
@@ -244,7 +250,7 @@ export default async function Home() {
       <footer className="w-full bg-white border-t border-gray-100 py-12 px-6 lg:px-8 mt-10">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <Link href="/">
-            <img src="/logo.png" alt="Resorakownia logo" className="h-12 md:h-16 w-auto opacity-70 hover:opacity-100 transition-opacity" />
+            <img src="/logo.png" alt="Resorakownia logo" className="h-12 md:h-16 w-auto opacity-70 hover:opacity-100 transition-opacity" loading="lazy" />
           </Link>
 
           <div className="flex gap-8 text-sm font-medium text-gray-500">

@@ -12,8 +12,10 @@ export default async function NewAuctionPage() {
     redirect("/login");
   }
 
-  const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
-  const brands = await prisma.brand.findMany({ orderBy: { name: 'asc' } });
+  const [categories, brands] = await Promise.all([
+    prisma.category.findMany({ orderBy: { name: 'asc' } }),
+    prisma.brand.findMany({ orderBy: { name: 'asc' } })
+  ]);
 
   return (
     <AuctionForm

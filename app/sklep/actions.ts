@@ -18,9 +18,10 @@ export async function getCart() {
     orderBy: { addedAt: "desc" }
   });
 
-  // Korygujemy ilości w koszyku, jeśli stan magazynowy uległ zmniejszeniu
-  for (const item of items) {
-    if (item.quantity > item.product.stock) {
+  // Korygujemy ilości w koszyku, jeśli stan magazynowy uległ zmniejszeniu (równolegle)
+  const cartCorrections = items
+    .filter(item => item.quantity > item.product.stock)
+    .map(async (item) => {
       if (item.product.stock <= 0) {
         await prisma.cartItem.delete({ where: { id: item.id } });
         item.quantity = 0;
@@ -28,7 +29,10 @@ export async function getCart() {
         await prisma.cartItem.update({ where: { id: item.id }, data: { quantity: item.product.stock } });
         item.quantity = item.product.stock;
       }
-    }
+    });
+
+  if (cartCorrections.length > 0) {
+    await Promise.all(cartCorrections);
   }
 
   const validItems = items.filter(item => item.quantity > 0);
@@ -119,7 +123,7 @@ export async function removeCartItem(itemId: string) {
   return { success: true };
 }
 
-export async function checkoutCart() {
+export async function checkoutCart(deliveryCost: number = 0) {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -134,7 +138,7 @@ export async function checkoutCart() {
 
   const total = cartItems.reduce((acc, item) => {
     return acc + (Number(item.product.price) * item.quantity);
-  }, 0);
+  }, 0) + deliveryCost;
 
   // Sprawdzanie stanu magazynowego
   for (const item of cartItems) {
@@ -209,6 +213,7 @@ export async function toggleFavorite(productId: string) {
    if (existing) {
       await prisma.collectionItem.delete({ where: { id: existing.id } });
       revalidatePath(`/sklep`);
+      revalidatePath(`/dashboard`);
       return { status: "removed" };
    } else {
       await prisma.collectionItem.create({
@@ -218,6 +223,7 @@ export async function toggleFavorite(productId: string) {
         }
       });
       revalidatePath(`/sklep`);
+      revalidatePath(`/dashboard`);
       return { status: "added" };
    }
 }
@@ -228,14 +234,14 @@ export async function getIsFavorite(productId: string) {
 
   if (!user) return false;
 
-  const favColl = await prisma.collection.findFirst({
-    where: { userId: user.id, name: "Ulubione" }
-  });
-
-  if (!favColl) return false;
-
   const existing = await prisma.collectionItem.findFirst({
-    where: { collectionId: favColl.id, productId }
+    where: {
+      productId,
+      collection: {
+        userId: user.id,
+        name: "Ulubione"
+      }
+    }
   });
 
   return !!existing;

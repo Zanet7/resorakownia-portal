@@ -19,21 +19,22 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     notFound();
   }
 
-  // Sprawdzamy czy dany uzytkownik ma produkt w ulubionych
+  // Sprawdzamy czy dany uzytkownik ma produkt w ulubionych (za pomocą jednego zapytania z filtrem relacyjnym)
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   let isFav = false;
 
   if (user) {
-    const favColl = await prisma.collection.findFirst({
-       where: { userId: user.id, name: "Ulubione" }
+    const existing = await prisma.collectionItem.findFirst({
+      where: {
+        productId: product.id,
+        collection: {
+          userId: user.id,
+          name: "Ulubione"
+        }
+      }
     });
-    if (favColl) {
-      const existing = await prisma.collectionItem.findFirst({
-        where: { collectionId: favColl.id, productId: product.id }
-      });
-      isFav = !!existing;
-    }
+    isFav = !!existing;
   }
 
   return (

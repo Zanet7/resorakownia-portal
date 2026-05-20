@@ -59,21 +59,24 @@ export default async function SklepPage({ searchParams }: { searchParams: Promis
 
   const hasFilters = q !== '' || categoryList.length > 0 || brandList.length > 0 || scaleList.length > 0 || min !== undefined || max !== undefined || sort !== 'newest';
 
-  // Ukrywamy produkty niedostępne w magazynie oraz produkty będące na aukcji
+  // Ukrywamy produkty niedostępne w magazynie oraz produkty będące na aukcji. Pokazujemy tylko asortyment oficjalny (od administratora)
   where.stock = { gt: 0 };
   where.auction = null;
-
-  const products = await prisma.product.findMany({
-    where,
-    orderBy,
-    include: { brand: true, category: true }
-  });
-
-  const categories = await prisma.category.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] });
-  const brands = await prisma.brand.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] });
+  where.owner = { role: "ADMIN" };
 
   const supabase = supabaseServer();
-  const { data: { user } } = await supabase.auth.getUser();
+
+  const [products, categories, brands, { data: { user } }] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      orderBy,
+      include: { brand: true, category: true }
+    }),
+    prisma.category.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] }),
+    prisma.brand.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] }),
+    supabase.auth.getUser()
+  ]);
+
   let userFavs: string[] = [];
 
   if (user) {

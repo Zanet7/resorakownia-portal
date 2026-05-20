@@ -1,10 +1,11 @@
-import { Construction, History, Heart, User, ArrowRight, Gavel, Package, Mail, Trash2, TrendingUp } from "lucide-react";
+import { Construction, History, Heart, User, ArrowRight, Gavel, Package, Mail, Trash2, TrendingUp, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import CancelAuctionButton from "@/components/dashboard/CancelAuctionButton";
 import CancelledBidsAlert from "@/components/dashboard/CancelledBidsAlert";
 import { supabaseServer } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import ProductCard from "@/components/ProductCard";
 
 export const metadata = {
   title: "Twój Panel | Resorakownia",
@@ -18,47 +19,79 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const dbUser = await prisma.user.findUnique({
-    where: { id: user.id },
-    select: { username: true, role: true }
-  });
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const [dbUser, myAuctions, wonAuctions, biddingAuctions, favoriteItems, orders] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: user.id },
+      select: { username: true, role: true }
+    }),
+    prisma.auction.findMany({
+      where: { ownerId: user.id },
+      include: { product: true, winner: true, bids: { orderBy: { amount: "desc" }, take: 1 } },
+      orderBy: { createdAt: "desc" }
+    }),
+    prisma.auction.findMany({
+      where: { winnerId: user.id },
+      include: { product: true, owner: true },
+      orderBy: { endDate: "desc" }
+    }),
+    prisma.auction.findMany({
+      where: { 
+        bids: { some: { userId: user.id } },
+        OR: [
+          { status: "ACTIVE" },
+          { status: "COMPLETED", winnerId: { not: user.id }, endDate: { gte: sevenDaysAgo } },
+          { status: "CANCELLED", endDate: { gte: sevenDaysAgo } }
+        ]
+      },
+      include: { bids: { orderBy: { amount: "desc" }, take: 1 } },
+      orderBy: { endDate: "desc" }
+    }),
+    prisma.collectionItem.findMany({
+      where: {
+        collection: {
+          userId: user.id,
+          name: "Ulubione"
+        }
+      },
+      include: {
+        product: {
+          include: {
+            brand: true,
+            category: true
+          }
+        }
+      },
+      orderBy: {
+        addedAt: "desc"
+      }
+    }),
+    prisma.order.findMany({
+      where: { userId: user.id },
+      include: {
+        items: {
+          include: {
+            product: {
+              include: {
+                brand: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: {
+        createdAt: "desc"
+      }
+    })
+  ]);
 
   if (dbUser?.role === "ADMIN") {
     redirect("/admin");
   }
 
   const username = dbUser?.username || "Kolekcjonerze";
-
-  // Pobierz moje wystawione aukcje
-  const myAuctions = await prisma.auction.findMany({
-    where: { ownerId: user.id },
-    include: { product: true, winner: true, bids: { orderBy: { amount: "desc" }, take: 1 } },
-    orderBy: { createdAt: "desc" }
-  });
-
-  // Pobierz wygrane aukcje
-  const wonAuctions = await prisma.auction.findMany({
-    where: { winnerId: user.id },
-    include: { product: true, owner: true },
-    orderBy: { endDate: "desc" }
-  });
-
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-  // Pobierz licytowane aukcje (aktywne + zakończone w ciągu ostatnich 7 dni, w których nie wygraliśmy)
-  const biddingAuctions = await prisma.auction.findMany({
-    where: { 
-      bids: { some: { userId: user.id } },
-      OR: [
-        { status: "ACTIVE" },
-        { status: "COMPLETED", winnerId: { not: user.id }, endDate: { gte: sevenDaysAgo } },
-        { status: "CANCELLED", endDate: { gte: sevenDaysAgo } }
-      ]
-    },
-    include: { bids: { orderBy: { amount: "desc" }, take: 1 } },
-    orderBy: { endDate: "desc" }
-  });
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col py-12 px-4 sm:px-6 lg:px-8">
@@ -212,6 +245,155 @@ export default async function DashboardPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+        </div>
+
+        {/* Ulubione Produkty */}
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-8">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <Heart className="w-6 h-6 text-red-500 fill-red-500" /> Ulubione produkty
+            </h2>
+            <span className="text-xs font-semibold bg-red-50 text-red-600 px-2.5 py-1 rounded-full uppercase tracking-wider">
+              {favoriteItems.length} {favoriteItems.length === 1 ? 'model' : favoriteItems.length > 1 && favoriteItems.length < 5 ? 'modele' : 'modeli'}
+            </span>
+          </div>
+
+          {favoriteItems.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+              <p className="text-gray-500 font-medium mb-1">Brak ulubionych produktów</p>
+              <p className="text-gray-400 text-sm mb-4">Dodaj produkty w sklepie za pomocą ikony serduszka, aby pojawiły się w tym miejscu.</p>
+              <Link
+                href="/sklep"
+                className="inline-flex items-center gap-2 bg-black text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-colors"
+              >
+                Przejdź do sklepu
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {favoriteItems.map((item) => (
+                <ProductCard
+                  key={item.product.id}
+                  p={{
+                    ...item.product,
+                    price: Number(item.product.price)
+                  }}
+                  isFavInitial={true}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Historia Zakupów */}
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-8">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <ShoppingBag className="w-6 h-6 text-orange-500" /> Historia zakupów
+            </h2>
+            <span className="text-xs font-semibold bg-orange-50 text-orange-600 px-2.5 py-1 rounded-full uppercase tracking-wider">
+              {orders.length} {orders.length === 1 ? 'zamówienie' : orders.length > 1 && orders.length < 5 ? 'zamówienia' : 'zamówień'}
+            </span>
+          </div>
+
+          {orders.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+              <p className="text-gray-500 font-medium mb-1">Brak historii zakupów</p>
+              <p className="text-gray-400 text-sm mb-4">Nie dokonałeś jeszcze żadnych zakupów w naszym portalu.</p>
+              <Link
+                href="/sklep"
+                className="inline-flex items-center gap-2 bg-black text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-colors"
+              >
+                Przejdź do sklepu
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {orders.map((order) => (
+                <div key={order.id} className="border border-gray-100 rounded-2xl p-5 hover:shadow-md transition-shadow">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-50 mb-4">
+                    <div className="space-y-1">
+                      <div className="text-xs font-semibold text-gray-400 uppercase">Zamówienie</div>
+                      <div className="text-sm font-mono font-bold text-gray-800 break-all">{order.id}</div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-4">
+                      <div className="text-right sm:text-left">
+                        <div className="text-xs font-semibold text-gray-400 uppercase">Data</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {new Date(order.createdAt).toLocaleDateString("pl-PL", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit"
+                          })}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-gray-400 uppercase mb-0.5">Status</div>
+                        {order.status === "PENDING" ? (
+                          <span className="bg-yellow-50 text-yellow-700 border border-yellow-200 text-xs px-2.5 py-1 rounded-md font-bold inline-block">OCZEKUJĄCE</span>
+                        ) : order.status === "PAID" ? (
+                          <span className="bg-blue-50 text-blue-700 border border-blue-200 text-xs px-2.5 py-1 rounded-md font-bold inline-block">OPŁACONE</span>
+                        ) : order.status === "SHIPPED" ? (
+                          <span className="bg-purple-50 text-purple-700 border border-purple-200 text-xs px-2.5 py-1 rounded-md font-bold inline-block">WYSŁANE</span>
+                        ) : order.status === "COMPLETED" ? (
+                          <span className="bg-green-50 text-green-700 border border-green-200 text-xs px-2.5 py-1 rounded-md font-bold inline-block">ZREALIZOWANE</span>
+                        ) : (
+                          <span className="bg-red-50 text-red-700 border border-red-200 text-xs px-2.5 py-1 rounded-md font-bold inline-block">ANULOWANE</span>
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-gray-400 uppercase">Razem</div>
+                        <div className="text-sm font-black text-gray-900">{Number(order.totalPrice).toFixed(2)} PLN</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Zakupione modele:</div>
+                    <div className="divide-y divide-gray-50">
+                      {order.items.map((item) => (
+                        <div key={item.id} className="py-2.5 flex items-center justify-between gap-4 first:pt-0 last:pb-0">
+                          <div className="flex items-center gap-3">
+                            {item.product.imageUrl && (
+                              <div className="w-12 h-12 rounded-lg bg-gray-50 p-1 flex items-center justify-center border border-gray-100 shrink-0">
+                                <img
+                                  src={item.product.imageUrl}
+                                  alt={item.product.name}
+                                  className="max-w-full max-h-full object-contain"
+                                  loading="lazy"
+                                />
+                              </div>
+                            )}
+                            <div>
+                              <Link
+                                href={`/sklep/${item.product.id}`}
+                                className="font-bold text-gray-900 hover:text-orange-600 transition-colors text-sm line-clamp-1"
+                              >
+                                {item.product.name}
+                              </Link>
+                              <div className="text-xs text-gray-500 font-semibold uppercase">
+                                {item.product.brand?.name || "ZBIORCZY"}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <div className="text-sm font-bold text-gray-900">
+                              {item.quantity} szt. &times; {Number(item.price).toFixed(2)} PLN
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Suma: {(Number(item.price) * item.quantity).toFixed(2)} PLN
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

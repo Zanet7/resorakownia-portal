@@ -57,8 +57,10 @@ export default async function AdminPage() {
   }
 
   // Fetch some quick stats
-  const productsCount = await prisma.product.count();
-  const usersCount = await prisma.user.count();
+  const [productsCount, usersCount] = await Promise.all([
+    prisma.product.count(),
+    prisma.user.count()
+  ]);
 
   return (
     <div className="min-h-screen bg-gray-50/50 pb-20">

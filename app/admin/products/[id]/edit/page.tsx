@@ -8,9 +8,13 @@ import { notFound } from "next/navigation";
 export default async function AdminProductEditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   
-  const product = await prisma.product.findUnique({
-    where: { id }
-  });
+  const [product, categories, brands] = await Promise.all([
+    prisma.product.findUnique({
+      where: { id }
+    }),
+    prisma.category.findMany({ orderBy: { name: 'asc' } }),
+    prisma.brand.findMany({ orderBy: { name: 'asc' } })
+  ]);
 
   if (!product) {
     notFound();
@@ -21,9 +25,6 @@ export default async function AdminProductEditPage({ params }: { params: Promise
     ...product,
     price: Number(product.price)
   };
-
-  const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
-  const brands = await prisma.brand.findMany({ orderBy: { name: 'asc' } });
 
   return (
     <ProductForm 

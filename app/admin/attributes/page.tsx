@@ -14,8 +14,10 @@ export default async function AdminAttributesPage() {
     return <div className="p-10">Brak dostępu</div>;
   }
 
-  const categories = await prisma.category.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] });
-  const brands = await prisma.brand.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] });
+  const [categories, brands] = await Promise.all([
+    prisma.category.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] }),
+    prisma.brand.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] })
+  ]);
 
   return (
     <div className="min-h-screen bg-gray-50/50 pb-20">

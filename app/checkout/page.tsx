@@ -32,7 +32,7 @@ export default function CheckoutPage() {
     // Symulacja ładowania i płatności
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    const result = await checkoutCart();
+    const result = await checkoutCart(deliveryCost);
     if (result.success) {
       await fetchCart();
       setSuccess(true);

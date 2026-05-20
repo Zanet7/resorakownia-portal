@@ -54,6 +54,7 @@ export default function ProductCard({ p, isFavInitial }: { p: any, isFavInitial:
           src={p.imageUrl || "https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&q=80&w=800"} 
           alt={p.name} 
           className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+          loading="lazy"
         />
       </div>
 

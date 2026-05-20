@@ -5,13 +5,9 @@ import { ArrowLeft, Car, Tag, User as UserIcon, Calendar, Info, Clock, AlertCirc
 import BidForm from "@/components/BidForm";
 import Countdown from "@/components/Countdown";
 import { supabaseServer } from "@/lib/supabase/server";
-import { checkAndCloseAuction } from "@/app/aukcje/actions";
 
 export default async function AuctionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
-
-  // Lazy Evaluation: Sprawdzamy, czy aukcja nie powinna zostać zamknięta
-  await checkAndCloseAuction(resolvedParams.id);
 
   const auction = await prisma.auction.findUnique({
     where: { id: resolvedParams.id },
@@ -30,6 +26,23 @@ export default async function AuctionDetailPage({ params }: { params: Promise<{ 
 
   if (!auction) {
     notFound();
+  }
+
+  // Lazy Evaluation: Sprawdzamy i zamykamy aukcję w bazie, jeśli wygasła, oraz aktualizujemy obiekt w pamięci
+  if (auction.status === "ACTIVE" && new Date(auction.endDate) < new Date()) {
+    const highestBid = auction.bids.length > 0 ? auction.bids[0] : null;
+    const winnerId = highestBid ? highestBid.userId : null;
+
+    await prisma.auction.update({
+      where: { id: auction.id },
+      data: {
+        status: "COMPLETED",
+        winnerId
+      }
+    });
+
+    auction.status = "COMPLETED";
+    auction.winnerId = winnerId;
   }
 
   const isEnded = auction.status !== "ACTIVE" || new Date(auction.endDate) < new Date();

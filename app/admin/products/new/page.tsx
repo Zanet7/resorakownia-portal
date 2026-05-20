@@ -5,8 +5,10 @@ import { createProduct } from "../actions";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminProductsNewPage() {
-  const categories = await prisma.category.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] });
-  const brands = await prisma.brand.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] });
+  const [categories, brands] = await Promise.all([
+    prisma.category.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] }),
+    prisma.brand.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] })
+  ]);
 
   return (
     <ProductForm 

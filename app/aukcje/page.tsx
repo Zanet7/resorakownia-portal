@@ -18,22 +18,28 @@ export default async function AukcjePage({ searchParams }: { searchParams: Promi
   }
 
   // Zamknijmy najpierw przeterminowane aukcje (Lazy Evaluation)
-  const activeAuctions = await prisma.auction.findMany({
-    where: { status: "ACTIVE" },
+  const now = new Date();
+  const expiredAuctions = await prisma.auction.findMany({
+    where: { 
+      status: "ACTIVE",
+      endDate: { lt: now }
+    },
     include: { bids: { orderBy: { amount: "desc" }, take: 1 } }
   });
 
-  for (const auction of activeAuctions) {
-    if (new Date(auction.endDate) < new Date()) {
-      const highestBid = auction.bids[0];
-      await prisma.auction.update({
-        where: { id: auction.id },
-        data: {
-          status: "COMPLETED",
-          winnerId: highestBid ? highestBid.userId : null
-        }
-      });
-    }
+  if (expiredAuctions.length > 0) {
+    await Promise.all(
+      expiredAuctions.map((auction) => {
+        const highestBid = auction.bids[0];
+        return prisma.auction.update({
+          where: { id: auction.id },
+          data: {
+            status: "COMPLETED",
+            winnerId: highestBid ? highestBid.userId : null
+          }
+        });
+      })
+    );
   }
 
   const auctions = await prisma.auction.findMany({
